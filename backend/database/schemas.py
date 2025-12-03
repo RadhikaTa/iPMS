@@ -34,3 +34,14 @@ class Chart(BaseModel):
 
     class Config:
         populate_by_name = True
+
+class Chart1(BaseModel):
+    # This setup is clever and correct.
+    # id: str = Field(alias='part_no')
+
+    # These fields match your SQL query AND your React table
+    items_count: int
+    category: str
+
+    class Config:
+        populate_by_name = True
