@@ -1,19 +1,18 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from typing import List
+from typing import List, Optional # <<-- ADD Optional HERE
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
+# ... rest of the file
 
 # Ensure these imports match your project structure
 from backend.prediction_backend import router as prediction_router
 from backend.database.db_connection import get_db_connection
 from backend.database import schemas
 
-# ---------------------------
 # Load .env FROM backend folder
-# ---------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ENV_PATH = os.path.join(BASE_DIR, ".env")
 load_dotenv(ENV_PATH)
@@ -23,17 +22,13 @@ print("DB_NAME =", os.getenv("DB_NAME"))
 print("DB_HOST =", os.getenv("DB_HOST"))
 print("DB_USER =", os.getenv("DB_USER"))
 
-# ---------------------------
 # FastAPI App
-# ---------------------------
 app = FastAPI()
 
 # Include prediction router under root
 app.include_router(prediction_router)
 
-# ---------------------------
 # CORS
-# ---------------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -49,9 +44,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------------------------
 # Database dependency
-# ---------------------------
 def get_db():
     conn = get_db_connection()
 
@@ -66,10 +59,50 @@ def get_db():
     finally:
         conn.close()
 
+# --- NEW ENDPOINT FOR COMPARISON TABLE INITIAL DATA ---
+@app.get("/api/stock-details", response_model=List[schemas.StockDetail])
+def get_dealer_stocking_details(
+    cust_number: str,
+    item_no: Optional[str] = None,
+    prediction_month: Optional[str] = None,  # ← NEW
+    cursor=Depends(get_db)
+):
+    """
+    Fetch PI predicted quantity and stock details.
+    """
 
-# ---------------------------
+    base_query = """
+        SELECT
+            cust_number,
+            item_no,
+            pe_suggested_stock_qty
+        FROM public.dealer_stocking_details
+        WHERE cust_number = %s
+    """
+    params = [cust_number]
+
+    if item_no:
+        base_query += " AND item_no = %s"
+        params.append(item_no)
+
+    if prediction_month:
+        base_query += " AND prediction_month = %s"
+        params.append(prediction_month)
+
+    base_query += " LIMIT 100"
+
+    try:
+        cursor.execute(base_query, tuple(params))
+        data = cursor.fetchall()
+        return data
+
+    except Exception as error:
+        print(f"Error fetching dealer stocking details: {error}")
+        raise HTTPException(status_code=500, detail="Database query error for stock details")
+
+    
+
 # GET /api/parts
-# ---------------------------
 @app.get("/api/parts", response_model=List[schemas.Part])
 def get_parts_list(
     dealer_code: str,
@@ -132,10 +165,7 @@ def get_parts_list(
         print(f"Error fetching parts list: {error}")
         raise HTTPException(status_code=500, detail="Database query error")
 
-
-# ---------------------------
 # GET /api/inv-health
-# ---------------------------
 @app.get("/api/inv-health", response_model=List[schemas.Chart])
 def get_inventory_health_chart_data(
     dealer_code: str,
