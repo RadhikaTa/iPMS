@@ -46,3 +46,10 @@
   font-weight: normal;
   font-style: normal;
 }
+
+.underline-offset {
+  font-weight: bold;     /* makes text bold */
+  color: black;  
+  text-decoration: underline;
+  text-underline-offset: 29px;
+}

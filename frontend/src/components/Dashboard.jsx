@@ -10,6 +10,7 @@ import Print from "../assets/Print.svg";
 import Returnable from "../assets/Returnable.svg";
 import Collision from "../assets/Collision.svg";
 import Scrap from "../assets/Scrap.svg";
+import { Link } from "react-router-dom";
 
 // ===================== CHART.JS PLUGIN DEFINITION (TOTAL IN CENTER) =====================
 const doughnutLabelsPlugin = {
@@ -55,7 +56,17 @@ const Dashboard = () => {
       },
     ],
   });
-
+    
+// Stock chart state (initial values mirror the previous hardcoded data)
+const [stockChartData, setStockChartData] = useState({
+        labels: ["EXCLUDED_STOCK", "SUGGESTED_STOCK", "OTHERS_STOCK"],
+        datasets: [
+                {
+                        data: [0,5,0],
+                        backgroundColor: ["#adb5bd", "#ff8800", "#ffcc00"],
+                },
+        ],
+});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -70,24 +81,19 @@ const Dashboard = () => {
     "IDLE": "#ffc107",
     "PREIDLE": "#d63384",
     "IDLE-RETIRED": "#adb5bd",
+    "SUGGESTED_STOCK": "#ff8800",
+    "EXCLUDED_STOCK": "#adb5bd",
+    "OTHERS_STOCK": "#ffcc00",
   };
+  
 
-  // Stock Chart (Static)
-  const stockDataSource = [
-    { label: "OTHERS", count: 1541, donatcolor: "#ffcc00" },
-    { label: "SUGGESTED", count: 476, donatcolor: "#ff8800" },
-    { label: "EXCLUDED", count: 245, donatcolor: "#adb5bd" },
-  ];
-  const stockChartData = {
-    labels: stockDataSource.map((i) => i.label),
-    datasets: [
-      {
-        data: stockDataSource.map((i) => i.count),
-        backgroundColor: stockDataSource.map((i) => i.donatcolor),
-      },
-    ],
-  };
-
+        // Fallback data source for suggested stocks (kept for reference)
+//        const stockDataSource = [
+//                { label: "OTHERS", count: 1541, donatcolor: "#ffcc00" },
+//                { label: "SUGGESTED", count: 476, donatcolor: "#ff8800" },
+//                { label: "EXCLUDED", count: 245, donatcolor: "#adb5bd" },
+//        ];
+//
   // ⚠️ Define the required dealer code here (outside the useEffects for better scope)
   const DEALER_CODE = typeof window !== 'undefined' ? localStorage.getItem("dealer_code") || "10131" : "10131"; 
 
@@ -160,30 +166,68 @@ const Dashboard = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [DEALER_CODE]); // 🎯 Added dependency on DEALER_CODE
 // ... (rest of the component) ...
+ 
 
+    //====================FETCH SUGGESTED STOCKS DATA=====================
+// ================== FETCH SUGGESTED STOCKS DATA ===================
+useEffect(() => {
+    const fetchSuggestedStocks = async () => {
+        try {
+            const url = `http://127.0.0.1:8000/api/suggested-stocks?dealer_code=${DEALER_CODE}`;
 
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`API Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (Array.isArray(data)) {
+                const newChartData = {
+                    labels: data.map(item => item.category.toUpperCase()),
+
+                    datasets: [
+                        {
+                            data: data.map(item => item.items_count),
+                            backgroundColor: data.map(
+                                item => donatColor[item.category.toUpperCase()] || "#ccc"
+                            ),
+                        },
+                    ],
+                };
+
+                setStockChartData(newChartData);
+            }
+        } catch (err) {
+            console.error("Error fetching Suggested Stocks:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    fetchSuggestedStocks();
+}, [DEALER_CODE]);
+ // 🎯 Added dependency on DEALER_CODE
+// ... (rest of the component) ...
+ 
   // ===================== CHART OPTIONS =====================
-  const doughnutOptions = {
-    // Disable Chart.js legend since we are rendering custom labels next to the chart
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        callbacks: {
-          label: function (ctx) {
-            let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-            // 🎯 FIXED: Tooltip percentage to 2 decimal places
-            let percentage = ((ctx.raw / total) * 100).toFixed(2);
-            return `${ctx.label}: ${ctx.raw} (${percentage}%)`;
-          },
-        },
-      },
-      doughnutLabels: true, // Enable the custom total-in-center plugin
-    },
-    cutout: "85%", // Increased cutout for a thinner ring
-    maintainAspectRatio: false, // Allows chart container to define the size more easily
-  };
+ const doughnutOptions = {
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            callbacks: {
+                label: function (ctx) {
+                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((ctx.raw / total) * 100).toFixed(2);
+                    return `${ctx.label}: ${ctx.raw} (${percentage}%)`;
+                },
+            },
+        },
+    },
+    cutout: "85%",
+    maintainAspectRatio: false,
+};
+
 
 
   // ===================== PAGINATION =====================
@@ -282,6 +326,7 @@ const Dashboard = () => {
         </div>
 
         {/* Inventory Health Chart */}
+        <Link to="/inventory-health-info">
         <div className="border p-4 rounded shadow-sm items-center gap-6">
           <h2 className="font-bold text-sm uppercase mb-2 text-center">Inventory Health</h2>
           <div className="flex">
@@ -298,6 +343,7 @@ const Dashboard = () => {
           </div>
 
         </div>
+        </Link>
 
 
         {/* Suggested Stocks Chart */}

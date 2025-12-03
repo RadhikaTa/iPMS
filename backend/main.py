@@ -197,3 +197,52 @@ def get_inventory_health_chart_data(
     except Exception as error:
         print(f"Error fetching inventory health data: {error}")
         raise HTTPException(status_code=500, detail="Error fetching data from database")
+    
+
+@app.get("/api/suggested-stocks", response_model=List[schemas.Chart1])
+def get_suggested_stocks_chart_data(
+    dealer_code: str,
+    skip: int = 0,
+    limit: int = 100,
+    cursor=Depends(get_db)
+):
+
+    query = """
+        with total_stock AS(
+            SELECT COUNT(DISTINCT PART_NO) AS items_count,DEALER_CODE
+            FROM DEALER_DAILY_STOCK 
+            WHERE DEALER_CODE= %s
+            GROUP BY DEALER_CODE
+            ),suggested_stock AS(
+            SELECT COUNT(DISTINCT t1.PART_NO) AS items_count,DEALER_CODE,'SUGGESTED_STOCK' AS CATEGORY
+            FROM DEALER_DAILY_STOCK t1 inner join PART_PURCHASE_FORECAST2 t2 on t1.PART_NO = t2.PART_NO AND t1.DEALER_CODE= cast(t2.DLR_CD AS VARCHAR)
+            WHERE t1.DEALER_CODE= %s
+            GROUP BY DEALER_CODE
+            ),excluded_stock AS(
+            SELECT COUNT(DISTINCT t1.PART_NO) AS items_count,DEALER_CODE,'EXCLUDED_STOCK' AS CATEGORY
+            FROM DEALER_DAILY_STOCK t1 inner join PARTS_MASTER t2 on t1.PART_NO = t2.PART_NO
+            WHERE HAZMAT_ITEM_FLAG = 'Y' AND t1.DEALER_CODE='10131'--PART_STATE
+            GROUP BY DEALER_CODE
+            ),other_stock AS(
+            SELECT t1.items_count-(t2.items_count + t3.items_count) AS items_count,
+            t1.DEALER_CODE,'OTHERS_STOCK' AS CATEGORY
+            FROM total_stock t1,suggested_stock t2,excluded_stock t3
+            WHERE t1.DEALER_CODE=%s AND t2.DEALER_CODE=%s AND t3.DEALER_CODE=%s
+            )
+            SELECT CATEGORY,ITEMS_COUNT FROM suggested_stock
+            UNION
+            SELECT CATEGORY,ITEMS_COUNT FROM excluded_stock
+            UNION
+            SELECT CATEGORY,ITEMS_COUNT FROM other_stock 
+    """
+
+    try:
+        cursor.execute(
+            query,
+            (dealer_code, dealer_code, dealer_code, dealer_code, dealer_code)
+        )
+        return cursor.fetchall()
+
+    except Exception as error:
+        print(f"Error fetching suggested stocks data: {error}")
+        raise HTTPException(status_code=500, detail="Error fetching data from database")
