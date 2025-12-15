@@ -1,16 +1,21 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from typing import List, Optional # <<-- ADD Optional HERE
+from typing import List, Optional, Dict, Any
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
-# ... rest of the file
 
 # Ensure these imports match your project structure
+# NOTE: The router file must now contain the actual /api/top100-parts logic.
 from backend.prediction_backend import router as prediction_router
 from backend.database.db_connection import get_db_connection
 from backend.database import schemas
+
+# --- FIX: Import dependency from the new decoupled file ---
+# This ensures that both main.py's local endpoints and the router's endpoints 
+# use the same working database dependency without circular imports.
+from backend.db_dependencies import get_db 
 
 # Load .env FROM backend folder
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -44,27 +49,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Database dependency
-def get_db():
-    conn = get_db_connection()
+# NOTE: The 'def get_db()' function has been moved to backend/db_dependencies.py. 
+# The function below, originally copied in your prompt, should be placed in 
+# backend/db_dependencies.py (along with its imports) for the structural fix to work correctly.
 
-    if conn is None:
-        raise HTTPException(
-            status_code=500,
-            detail="Database connection failed"
-        )
-
-    try:
-        yield conn.cursor(cursor_factory=RealDictCursor)
-    finally:
-        conn.close()
-
-# --- NEW ENDPOINT FOR COMPARISON TABLE INITIAL DATA ---
+# --- ENDPOINT FOR SINGLE PART/STOCK DETAILS ---
 @app.get("/api/stock-details", response_model=List[schemas.StockDetail])
 def get_dealer_stocking_details(
     cust_number: str,
     item_no: Optional[str] = None,
-    prediction_month: Optional[str] = None,  # ← NEW
+    prediction_month: Optional[str] = None, 
     cursor=Depends(get_db)
 ):
     """
@@ -227,3 +221,5 @@ def get_inventory_health_chart_data(
     except Exception as error:
         print(f"Error fetching inventory health data: {error}")
         raise HTTPException(status_code=500, detail="Error fetching data from database")
+    
+# NOTE: The /api/top100-parts endpoint has been moved to the router file.

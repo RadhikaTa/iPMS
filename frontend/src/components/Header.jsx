@@ -1,17 +1,17 @@
 import React from 'react';
-// import MazdaLogo from '../assets/MazdaLogo.png';
 import iAI from '../assets/iAI.png';
 import UserIcon from '../assets/user-icon.png';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-import { useSidebar } from './MainLayout'; // Import context
+import { useSidebar } from './MainLayout';
 
-// Corrected sections structure
+// Sidebar sections
 const sections = [
   {
     title: 'PARTS ORDER',
     items: [
       { label: 'Suggested Stocks', path: '/' },
+      { label: 'iAI Prediction', path: '/part-numbers-quantity-prediction' },
       { label: 'Inquire Availability', path: '/inquire-availability' },
       { label: 'VOR Order', path: '/vor-order' },
       { label: 'Order Inquiry', path: '/order-inquiry' },
@@ -35,16 +35,17 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 💡 FIX: Read the stored dealer code from localStorage
-  // Use the stored value, or default to "10131" if none is set yet
-  const currentDealerCode = localStorage.getItem("dealer_code") || "10131"; 
+  // Current dealer code
+  const currentDealerCode = localStorage.getItem("dealerCode") || "10131";
 
   return (
     <>
       {/* ===== Header Bar ===== */}
       <header className="w-full h-[70px] bg-[#2B2B2B] flex items-center justify-between px-4 md:px-6 lg:px-8 shadow-sm z-30 fixed top-0 left-0 right-0">
+        
         {/* Left: Hamburger + Logo */}
         <div className="flex items-center gap-4 md:gap-6">
+          
           {/* Hamburger */}
           <button
             className="text-white"
@@ -53,29 +54,30 @@ const Header = () => {
             {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
-          {/* Mazda Logo and Title */}
+          {/* Logo */}
           <img
             src={iAI}
             alt="Mazda Logo"
             className="w-10 h-5 md:w-[50px] md:h-[30px] lg:w-[50px] lg:h-[30px]"
           />
+
+          {/* Title */}
           <h1 className="text-white text-[18px] md:text-[22px] lg:text-[26px] font-bold font-mazda leading-none">
             iPMS
           </h1>
         </div>
 
         {/* Right: User Info */}
-        <div className="flex items-center gap-3 md:gap-4 ">
-          <div className=" text-white font-mazda uppercase text-sm text-center leading-tight">
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="text-white font-mazda uppercase text-sm text-center leading-tight">
             Radhika Tayal
             <br />
-            <span className="text-black ">
+            <span className="text-black">
               <select
-                // 💡 FIX: Set the value to the retrieved code from localStorage
                 value={currentDealerCode}
                 onChange={(e) => {
-                  localStorage.setItem("dealer_code", e.target.value);
-                  window.location.reload(); // reloads the app with the selected dealer
+                  localStorage.setItem("dealerCode", e.target.value);
+                  window.location.reload();
                 }}
               >
                 <option value="10131">10131</option>
@@ -87,6 +89,7 @@ const Header = () => {
               </select>
             </span>
           </div>
+
           <img
             src={UserIcon}
             alt="User Icon"
@@ -102,24 +105,27 @@ const Header = () => {
       >
         {isSidebarOpen && (
           <div className="w-[220px]">
-            {sections.map((section, i) => (
-              <div key={i}>
+            {sections.map((section, index) => (
+              <div key={index}>
+                
+                {/* Section Title */}
                 <div className="h-[55px] flex items-center px-5 text-[13px] font-bold text-white uppercase border-b border-[#3A3A3A] tracking-widest">
                   {section.title}
                 </div>
 
+                {/* Section Items */}
                 <div className="flex flex-col">
-                  {(section.items || []).map((item, j) => {
+                  {(section.items || []).map((item, idx) => {
                     const isActive =
                       location.pathname === item.path ||
                       (item.label === 'Suggested Stocks' && location.pathname === '/');
 
                     return (
                       <button
-                        key={j}
+                        key={idx}
                         onClick={() => {
                           navigate(item.path);
-                          if (window.innerWidth < 768) setIsSidebarOpen(false); // Close sidebar on mobile
+                          if (window.innerWidth < 768) setIsSidebarOpen(false);
                         }}
                         className={`text-left text-[13px] font-medium tracking-wide px-6 py-3 transition-all
                           ${isActive
@@ -132,6 +138,7 @@ const Header = () => {
                     );
                   })}
                 </div>
+
               </div>
             ))}
           </div>

@@ -12,6 +12,7 @@ const Sidebar = () => {
       title: 'PARTS ORDER',
       items: [
         { label: 'Suggested Stocks', path: '/' },
+        { label: 'iAI Prediction', path: '/part-numbers-quantity-prediction' },
         { label: 'Inquire Availability', path: '/inquire-availability' },
         { label: 'VOR Order', path: '/vor-order' },
         { label: 'Order Inquiry', path: '/order-inquiry' },
@@ -19,7 +20,6 @@ const Sidebar = () => {
         { label: 'View Stock Order', path: '/view-stock-order' },
         { label: 'Manage Backorders', path: '/manage-backorders' },
         { label: 'Inquire Parts Orders', path: '/inquire-parts-orders' },
-        { label: 'Part Numbers Quantity Prediction', path: '/part-numbers-quantity-prediction' },
       ],
     },
     { title: 'PARTS RETURN', items: [] },

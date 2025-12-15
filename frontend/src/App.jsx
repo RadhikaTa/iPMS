@@ -21,6 +21,7 @@ function App() {
       <MainLayout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/part-numbers-quantity-prediction" element={<PartNumbersQuantityPrediction />} />
           <Route path="/idle-parts" element={<IdlePartsList />} />
           <Route path="/inquire-availability" element={<PartsInquiry />} />
           <Route path="/stock-order" element={<StockOrder />} />

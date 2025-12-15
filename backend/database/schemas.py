@@ -34,11 +34,13 @@ class Chart(BaseModel):
 
 # --- NEW SCHEMA FOR COMPARISON TABLE DATA FETCH ---
 class StockDetail(BaseModel):
-    """Schema for the initial data fetched for the comparison table."""
     dealer_code: str = Field(alias='cust_number')
     part_number: str = Field(alias='item_no')
-    piPrediction: int = Field(alias='qty_on_hand_pe_suggested') # PI's suggested quantity
-    current_stock: int = Field(alias='qty_on_hand') # Actual quantity on hand
+    pe_suggested_stock_qty: Optional[int] = Field(alias='pe_suggested_stock_qty')
 
     class Config:
         populate_by_name = True
+
+
+class PredictionResponse(BaseModel):
+    predicted_quantity: int

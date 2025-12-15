@@ -1,377 +1,239 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-/* ----------------- ICONS ----------------- */
-
-const TipIcon = ({ className = "w-4 h-4 text-orange-500" }) => (
-  <svg
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z"
-    />
-  </svg>
-);
-
-const IdleIcon = ({ className = "w-4 h-4 text-gray-500" }) => (
-  <svg
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
-);
-
-const PreIdleIcon = ({ className = "w-4 h-4 text-yellow-500" }) => (
-  <svg
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      d="M13 10V3L4 14h7v7l9-11h-7z"
-    />
-  </svg>
-);
-
-/* ----------------- MONTHS ----------------- */
+/* ----------------- CONSTANTS ----------------- */
 
 const allMonths = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December",
 ];
+
+const spinnerPathD = "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z";
 
 /* ----------------- COMPONENT ----------------- */
 
 export default function PartNumbersQuantityPrediction() {
-  // ✔️ Dealer code auto-loads from LocalStorage
-  const [dealerCode, setDealerCode] = useState(
-    localStorage.getItem("dealerCode") || "10131"
-  );
-
+  const [dealerCode, setDealerCode] = useState(localStorage.getItem("dealerCode") || "10131");
   const [selectedMonth, setSelectedMonth] = useState("October");
-  const [orderData, setOrderData] = useState([]);
+  const [predictionMode, setPredictionMode] = useState("single");
 
+  const [orderData, setOrderData] = useState([]);
   const [singlePartNumber, setSinglePartNumber] = useState("");
   const [singleLoading, setSingleLoading] = useState(false);
   const [singleError, setSingleError] = useState("");
 
+  const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkError, setBulkError] = useState("");
+  const [top100Data, setTop100Data] = useState([]);
 
   const updateItemByKey = (key, updates) => {
-    setOrderData((prev) =>
-      prev.map((item) => (item.key === key ? { ...item, ...updates } : item))
-    );
+    setOrderData((prev) => prev.map((i) => (i.key === key ? { ...i, ...updates } : i)));
   };
+
+  /* ----------------- API HELPERS ----------------- */
 
   const fetchWithBackoff = async (url, payload, retries = 3, delay = 1000) => {
     for (let i = 0; i < retries; i++) {
       try {
         const res = await axios.post(url, payload);
         return res.data.predicted_quantity;
-      } catch (error) {
-        if (i < retries - 1) {
-          await new Promise((r) => setTimeout(r, delay * Math.pow(2, i)));
-        } else {
-          throw error;
-        }
+      } catch (e) {
+        if (i === retries - 1) throw e;
+        await new Promise((r) => setTimeout(r, delay * Math.pow(2, i)));
       }
     }
   };
 
-  /* ----------------- SINGLE PREDICTION ----------------- */
+  /* ----------------- SINGLE ----------------- */
+
   const handleSinglePredict = async (e) => {
     e.preventDefault();
-
-    const dealer = dealerCode.trim();
-    const part = singlePartNumber.trim();
-    const month = selectedMonth.trim();
-
-    if (!dealer || !part || !month) {
-      setSingleError("Please enter   Part Number, and Month.");
-      return;
-    }
-
-    // ✔️ Save dealer code to LocalStorage whenever used
-    localStorage.setItem("dealerCode", dealer);
-
-    setSingleError("");
     setSingleLoading(true);
+    setSingleError("");
 
-    const uniqueKey = Date.now();
-
-    const loadingItem = {
-      key: uniqueKey,
-      partNumber: part,
-      dealer_code: dealer,
-      piPrediction: "-",
-      iaiPrediction: "Loading...",
-      isLoading: true,
-    };
-
-    setOrderData((prev) => [...prev, loadingItem]);
-
-    let piQty = "-";
-    let iaiQty = "Error";
+    const key = Date.now();
+    setOrderData((p) => [...p, { key, dealer_code: dealerCode, partNumber: singlePartNumber, piPrediction: "-", iaiPrediction: "-", isLoading: true }]);
 
     try {
-      /* --- PI Prediction (DB) --- */
-      const dbURL = `http://127.0.0.1:8000/api/stock-details?cust_number=${dealer}&item_no=${part}`;
+      const dbRes = await axios.get(`http://127.0.0.1:8000/api/stock-details?cust_number=${dealerCode}&item_no=${singlePartNumber}`);
+      const piQty = dbRes.data?.[0]?.pe_suggested_stock_qty ?? "-";
 
-      let dbData = [];
-
-      try {
-        const dbRes = await axios.get(dbURL);
-        dbData = dbRes.data;
-      } catch (err) {
-        console.warn("DB fetch failed:", err.message);
-      }
-
-      if (dbData.length > 0) {
-        piQty = dbData[0].piPrediction || "-";
-      } else {
-        setSingleError(
-          (prev) => (prev ? prev + " | " : "") + `No PI data found for ${part}.`
-        );
-      }
-
-      updateItemByKey(uniqueKey, { piPrediction: piQty });
-
-      /* --- ML Prediction --- */
-      const payload = {
-        dealer_code: dealer,
-        part_number: part,
-        month: month,
-      };
-
-      const mlQty = await fetchWithBackoff(
-        "http://127.0.0.1:8000/predict",
-        payload
-      );
-
-      iaiQty = Math.max(0, Math.round(mlQty));
-
-      updateItemByKey(uniqueKey, {
-        piPrediction: piQty,
-        iaiPrediction: iaiQty,
-        isLoading: false,
-      });
-    } catch (error) {
-      console.error("Single prediction failed:", error);
-
-      updateItemByKey(uniqueKey, {
-        iaiPrediction: "FAIL",
-        isLoading: false,
+      const mlQty = await fetchWithBackoff("http://127.0.0.1:8000/predict", {
+        dealer_code: dealerCode,
+        part_number: singlePartNumber,
+        month: selectedMonth,
       });
 
-      setSingleError("Prediction failed. Check API server.");
+      updateItemByKey(key, { piPrediction: piQty, iaiPrediction: Math.round(mlQty), isLoading: false });
+    } catch (e) {
+      updateItemByKey(key, { iaiPrediction: "FAIL", isLoading: false });
+      setSingleError("Prediction failed. Please check server.");
     } finally {
       setSingleLoading(false);
     }
   };
 
-  /* ----------------- BULK PLACEHOLDER ----------------- */
-  const handleBulkPredict = () => {
-    setBulkError("Bulk prediction is not implemented yet.");
+  /* ----------------- BULK ----------------- */
+
+  const handleBulkPredict = async () => {
+    setBulkLoading(true);
+    setBulkError("");
+    setTop100Data([]);
+
+    try {
+      const res = await axios.get(`http://127.0.0.1:8000/api/top100-parts?dealer_code=${dealerCode}&month=${selectedMonth}`);
+      setTop100Data(res.data);
+      if (!res.data.length) setBulkError("No prediction data available for selection.");
+    } catch (e) {
+      setBulkError("Failed to load Top 100 predictions.");
+    } finally {
+      setBulkLoading(false);
+    }
   };
 
-  const headerStyle =
-    "px-4 py-2 font-bold border border-[#E0E0E0] h-[66px] text-white bg-[#2B2B2B] text-center uppercase tracking-wider";
-
-  /* ----------------- JSX ----------------- */
+  const headerStyle = "px-4 py-2 font-bold border border-[#E0E0E0] h-[66px] text-white bg-[#2B2B2B] text-left uppercase tracking-wider text-[13px]";
 
   return (
-    <div className="w-full px-4 sm:px-6 pt-6 pb-10 bg-[#F5F5F5] min-h-screen">
-      <h1 className="text-2xl font-bold text-[#101010] mb-6 uppercase tracking-wider text-center">
-        iAI Prediction Dashboard
+    <div className="w-full px-4 sm:px-6 pt-6 pb-10 font-mazda bg-[#F5F5F5] min-h-screen">
+      {/* HEADER */}
+      <h1 className="text-2xl font-bold text-[#101010] mb-6 uppercase tracking-wider">
+        Prediction Dashboard
       </h1>
 
-      {/* ----------------- FORM ----------------- */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-6 border border-[#D9D9D9]">
-        <h2 className="text-lg font-bold mb-4 uppercase tracking-wider">
-          Single Part Prediction Query
-        </h2>
+      {/* MODE TOGGLE */}
+      <div className="mb-6 flex gap-4">
+        <button
+          onClick={() => setPredictionMode("single")}
+          className={`border border-black px-6 py-1 uppercase text-[12px] ${predictionMode === "single" ? "bg-black text-white" : "bg-white text-black"}`}
+        >
+          Single Part Prediction
+        </button>
+        <button
+          onClick={() => setPredictionMode("bulk")}
+          className={`border border-black px-6 py-1 uppercase text-[12px] ${predictionMode === "bulk" ? "bg-black text-white" : "bg-white text-black"}`}
+        >
+          Bulk Top 100 Prediction
+        </button>
+      </div>
 
-        <form onSubmit={handleSinglePredict}>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div>
-              <label className="block text-[#101010] font-bold text-[13px] tracking-[1.95px] mb-2 uppercase">
-                Dealer/Cust Code
-              </label>
+      {/* FILTER CARD */}
+      <div className="bg-white border border-[#D9D9D9] p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className="block text-[#101010] font-bold text-[13px] tracking-[1.95px] mb-2 uppercase">
+              Dealer / Cust Code
+            </label>
+            <input
+              value={dealerCode}
+              onChange={(e) => setDealerCode(e.target.value)}
+              className="border border-[#CCCCCC] px-4 py-2 w-full outline-none"
+            />
+          </div>
 
-              <input
-                type="text"
-                value={dealerCode}
-                onChange={(e) => {
-                  setDealerCode(e.target.value);
-                  localStorage.setItem("dealerCode", e.target.value);
-                }}
-                placeholder="Dealer Code (ex: 10131)"
-                className="border border-[#CCCCCC] px-4 py-2 w-full focus:border-black rounded-sm"
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-[#101010] font-bold text-[13px] tracking-[1.95px] mb-2 uppercase">
+              Prediction Month
+            </label>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="border border-[#CCCCCC] px-4 py-2 w-full bg-white"
+            >
+              {allMonths.map((m) => (
+                <option key={m}>{m}</option>
+              ))}
+            </select>
+          </div>
 
+          {predictionMode === "single" && (
             <div>
               <label className="block text-[#101010] font-bold text-[13px] tracking-[1.95px] mb-2 uppercase">
                 Part Number
               </label>
               <input
-                type="text"
                 value={singlePartNumber}
                 onChange={(e) => setSinglePartNumber(e.target.value)}
-                placeholder="Enter Part No"
-                className="border border-[#CCCCCC] px-4 py-2 w-full focus:border-black rounded-sm"
-                required
+                className="border border-[#CCCCCC] px-4 py-2 w-full outline-none"
               />
             </div>
+          )}
+        </div>
 
-            <div>
-              <label className="block text-[#101010] font-bold text-[13px] tracking-[1.95px] mb-2 uppercase">
-                Prediction Month
-              </label>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="border border-[#CCCCCC] px-4 py-2 w-full bg-white rounded-sm"
-                required
-              >
-                <option value="">Select Month</option>
-                {allMonths.map((m) => (
-                  <option key={m}>{m}</option>
-                ))}
-              </select>
-            </div>
-
+        <div className="mt-6 text-right">
+          {predictionMode === "single" ? (
             <button
-              type="submit"
+              onClick={handleSinglePredict}
               disabled={singleLoading}
-              className="bg-black text-white font-bold text-[12px] px-6 py-2 uppercase hover:bg-green-800 transition-colors rounded-sm w-full"
+              className="bg-black text-white px-6 py-2 text-[12px] uppercase"
             >
-              {singleLoading ? "Predicting..." : "Predict & Add to Table"}
+              {singleLoading ? "Predicting..." : "Predict"}
             </button>
-          </div>
-        </form>
+          ) : (
+            <button
+              onClick={handleBulkPredict}
+              disabled={bulkLoading}
+              className="bg-black text-white px-6 py-2 text-[12px] uppercase"
+            >
+              {bulkLoading ? "Loading..." : "Get Top 100"}
+            </button>
+          )}
+        </div>
 
-        {singleError && (
-          <p className="text-sm font-medium text-red-600 mt-3">
-            ⚠️ {singleError}
-          </p>
-        )}
+        {singleError && <p className="text-sm text-red-600 mt-3">{singleError}</p>}
+        {bulkError && <p className="text-sm text-yellow-600 mt-3">{bulkError}</p>}
       </div>
 
-      {/* ----------------- TABLE ----------------- */}
-
-      <h2 className="text-lg font-bold mt-8 mb-4 uppercase tracking-wider">
-        Part Order Quantity Comparison
-      </h2>
-
-      {bulkError && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-          {bulkError}
+      {/* SINGLE TABLE */}
+      {predictionMode === "single" && orderData.length > 0 && (
+        <div className="overflow-x-auto bg-white border border-[#D9D9D9] mb-6">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr>
+                <th className={headerStyle}>Dealer Code</th>
+                <th className={headerStyle}>Part Number</th>
+                <th className={headerStyle}>PI Suggested Stock</th>
+                <th className={headerStyle}>iAI Prediction</th>
+              </tr>
+            </thead>
+            <tbody className="text-[13px] text-[#101010]">
+              {orderData.map((i) => (
+                <tr key={i.key} className="h-[60px]">
+                  <td className="border border-[#E0E0E0] px-4 py-2 text-center">{i.dealer_code}</td>
+                  <td className="border border-[#E0E0E0] px-4 py-2 text-center font-mono">{i.partNumber}</td>
+                  <td className="border border-[#E0E0E0] px-4 py-2 text-center">{i.piPrediction}</td>
+                  <td className="border border-[#E0E0E0] px-4 py-2 text-center font-bold text-red-600">{i.iaiPrediction}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
-      <div className="overflow-x-auto bg-white border border-[#D9D9D9] rounded-lg shadow-lg">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="text-[13px] h-[66px] uppercase">
-              <th className={headerStyle}>Dealer Code</th>
-              <th className={headerStyle}>Part Number</th>
-              <th className={headerStyle}>PI Prediction</th>
-              <th className={headerStyle}>iAI Prediction</th>
-            </tr>
-          </thead>
-
-          <tbody className="text-[13px] text-[#101010]">
-            {orderData.length > 0 ? (
-              orderData.map((item) => (
-                <tr key={item.key} className="h-[60px] hover:bg-gray-50">
-                  <td className="border px-4 py-2 text-center font-semibold">
-                    {item.dealer_code}
-                  </td>
-
-                  <td className="border px-4 py-2 text-center font-bold font-mono">
-                    {item.partNumber}
-                  </td>
-
-                  <td className="border px-4 py-2 text-center bg-gray-100 font-semibold">
-                    {item.piPrediction}
-                  </td>
-
-                  <td className="border px-4 py-2 text-center font-extrabold text-red-600">
-                    {item.isLoading ? (
-                      <svg
-                        className="animate-spin h-5 w-5 mx-auto"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 
-                          5.373 0 12h4zm2 5.291A7.962 
-                          7.962 0 014 12H0c0 3.042 1.135 
-                          5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                    ) : item.iaiPrediction === "FAIL" ? (
-                      <span className="text-red-600 font-bold">FAIL</span>
-                    ) : (
-                      <span className="text-xl">{item.iaiPrediction}</span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            ) : (
+      {/* BULK TABLE */}
+      {predictionMode === "bulk" && top100Data.length > 0 && (
+        <div className="overflow-x-auto bg-white border border-[#D9D9D9]">
+          <table className="w-full border-collapse">
+            <thead>
               <tr>
-                <td colSpan="4" className="text-center py-8 text-gray-500">
-                  Enter a <strong>Part Number</strong>, and
-                  <strong> Month</strong> above to generate predictions.
-                </td>
+                <th className={headerStyle}>Rank</th>
+                <th className={headerStyle}>Part Number</th>
+                <th className={headerStyle}>iAI Monthly Prediction</th>
+                <th className={headerStyle}>PI Suggested Stock</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="text-[13px] text-[#101010]">
+              {top100Data.map((i, idx) => (
+                <tr key={i.item_no} className="h-[60px]">
+                  <td className="border border-[#E0E0E0] px-4 py-2 text-center font-bold">{idx + 1}</td>
+                  <td className="border border-[#E0E0E0] px-4 py-2 text-center font-mono">{i.item_no}</td>
+                  <td className="border border-[#E0E0E0] px-4 py-2 text-center font-bold text-red-600">{Math.round(i.predicted_monthly)}</td>
+                  <td className="border border-[#E0E0E0] px-4 py-2 text-center">{i.pe_suggested_stock_qty}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
