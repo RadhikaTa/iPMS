@@ -1,177 +1,248 @@
-import React, {useState} from "react";
+import React, {act, useEffect, useState} from "react";
 import { Link } from "react-router-dom";
 import '../index.css';
 
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
 export default function InventoryHealthInfo() {
   const [activeTab, setActiveTab] = useState("IDLE");
-  return (
+  const [allTables, setAllTables] = useState({
+    IDLE: [],
+    PRE_IDLE: [],
+    DROP_SHIP: [],
+    NORMAL: [],
+  });
+  
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const entriesPerPage = 5;
+
+  // Replace with actual dealer code as needed
+
+   const DEALER_CODE = "83314";
+   
+
+  // Fetch data from API 
+  useEffect(() => {
+    const fetchTableData = async () => {
+    
+      try {
+        setLoading(true);
+        const endpoints = {
+          IDLE: "idle-part-list",
+          PRE_IDLE: "pre-idle-part-list",
+          DROP_SHIP: "drop-ship-part-list",
+          NORMAL: "normal-part-list",
+        };
+
+        const requests = Object.keys(endpoints).map((key) =>
+          fetch(
+            `http://127.0.0.1:8000/api/${endpoints[key]}?dealer_code=${DEALER_CODE}` //FETCHING DATA FROM BACKEND
+          ).then((res) => res.json())
+        );
+
+        
+        
+        const results = await Promise.all(requests);
+
+        // Map results to corresponding tables
+
+        setAllTables({
+          IDLE: Array.isArray(results[0]) ? results[0] : results[0].data || [],
+          PRE_IDLE: Array.isArray(results[1]) ? results[1] : results[1].data || [],
+          DROP_SHIP: Array.isArray(results[2]) ? results[2] : results[2].data || [],
+          NORMAL: Array.isArray(results[3]) ? results[3] : results[3].data || [],
+        });
+        setLoading(false);
+        
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchTableData();
+  }, []);
+
+  const data = allTables[activeTab] || [];
+
+  // Pagination logic
+
+  const indexOfLastEntry = currentPage * entriesPerPage;
+  const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+  const currentEntries = data.slice(indexOfFirstEntry, indexOfLastEntry);
+
+  const totalPages = Math.ceil(data.length / entriesPerPage);
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  };
+
+  const getPageNumbers = () => {
+    let start = currentPage - 1;
+    let end = currentPage + 1;
+
+    if (start < 1) {
+      start = 1;
+      end = 3;
+    }
+
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(totalPages - 2, 1);
+    }
+
+    let pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
+  // Export to Excel functionality
+
+  const exportToExcel = () => {
+  const worksheet = XLSX.utils.json_to_sheet(data);   
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, activeTab);
+
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
+
+  const fileName = `${activeTab}_parts_list.xlsx`;
+
+  const blob = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  saveAs(blob, fileName);
+  };
+
+  // Print functionality
+  const printTable = () => {
+    window.print();
+  };
+  
+ return (
     <div className="w-full min-h-screen overflow-x-auto overflow-y-auto bg-gray-50">
-    <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="min-h-screen flex flex-col bg-gray-50">
         <Link to="/" className="font-bold text-sm p-3 underline">
           RETURN TO DASHBOARD
         </Link>
 
-      {/* NAVBAR */}
-      <nav className="w-full p-4 flex items-center text-[13px] text-gray-600 gap-8 font-medium border-b ">
-
-        {/* LEFT SIDE: Return to Dashboard */}
-        <button
-          onClick={() => setActiveTab("IDLE")}
-          className={`hover:text-gray-900 transition ${
-            activeTab === "IDLE" ? "underline-offset" : ""
-          }`
-        }> 
-          IDLE
-        </button>
-        <button
-          onClick={() => setActiveTab("PRE_IDLE")}
-          className={`hover:text-gray-900 transition ${
-            activeTab === "PRE_IDLE" ? "underline-offset" : ""
-          }`
-        }> 
-          PRE IDLE
-        </button>
-        <button
-          onClick={() => setActiveTab("DROP_SHIP")}
-          className={`hover:text-gray-900 transition ${
-            activeTab === "DROP_SHIP" ? "underline-offset" : ""
-          }`
-        }> 
-          DROP SHIP
-        </button>
-        <button
-          onClick={() => setActiveTab("NORMAL")}
-          className={`hover:text-gray-900 transition ${
-            activeTab === "NORMAL" ? "underline-offset" : ""
-          }`
-        }> 
-          NORMAL
-        </button>
-        
-
-      </nav>
-
-      {/* PAGE CONTENT */}
-      <div className="flex-1 p-6">
-
-        {/* Your table goes here */}
-        {activeTab === "IDLE" && (
-          <div>
-            <h2 className="text-xl font-semibold mb-2">IDLE PARTS LIST</h2>
-             
-             <div className="flex pt-2 pb-2">
-              <button
-                   
-                    className= "flex align-items-center bg-black text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-800">
-                       <img src="/src/assets/Excel.svg" alt="icon" /> 
-                     EXPORT TO EXCEL
-              </button>
-              <button
-                className="flex align-items-center bg-black text-white py-2 px-4 rounded  items-center gap-2 hover:bg-gray-800 ml-4"> 
-                <img src="/src/assets/print.svg" alt="icon" style={{ width: "20px", height: "20px", marginRight: "4px" }} /> 
-                PRINT
-              </button>
-             </div>
-            
-            <table className="w-full whitespace-nowrap mb-0  border-shadow-sm">
-              <thead className="bg-[#2B2B2B] text-white">
-                <tr>
-                  <th className="p-3 text-[13px] font-normal ">PART NO.</th>
-                  <th className="p-3 text-[13px] font-normal">PART DESCRIPTION</th>
-                  <th className="p-3 text-[13px] font-normal">ON HAND QTY</th>
-                  <th className="p-3 text-[13px] font-normal">DNP</th>
-                  <th className="p-3 text-[13px] font-normal">INVENTORY VALUE</th>
-                  <th className="p-3 text-[13px] font-normal">AGING MONTHS</th>
-                  <th className="p-3 text-[13px] font-normal">12 MONTHS SALES QTY</th>
-                  <th className="p-3 text-[13px] font-normal">PRODUCT HEIRARCHY</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="odd:bg-white even:bg-gray-100">
-                  <td className="p-3 text-[13px]">0000-11-0194</td>
-                  <td className="p-3 text-[13px]">BULB</td>
-                  <td className="p-3 text-[13px]">3</td>
-                  <td className="p-3 text-[13px]">2.05</td>
-                  <td className="p-3 text-[13px]">6.15</td>
-                  <td className="p-3 text-[13px]">9</td>
-                  <td className="p-3 text-[13px]">13</td>
-                  <td className="p-3 text-[13px]">REPAIR-ELECTRICAL</td>
-                </tr>
-                <tr className="odd:bg-white even:bg-gray-100">
-                  <td className="p-3 text-[13px]">KBB4-60-220</td>
-                  <td className="p-3 text-[13px]">COVER,COLUMN-UPPER</td>
-                  <td className="p-3 text-[13px]">3</td>
-                  <td className="p-3 text-[13px]">5.3</td>
-                  <td className="p-3 text-[13px]">15.9</td>
-                  <td className="p-3 text-[13px]">12</td>
-                  <td className="p-3 text-[13px]">4</td>
-                  <td className="p-3 text-[13px]">REPAIR-OTHER INTERIOR</td>
-            
-                </tr>
-                <tr className="odd:bg-white even:bg-gray-100">
-                  <td className="p-3 text-[13px]">0000-11-0H7</td>
-                  <td className="p-3 text-[13px]">BULB,LOW BEAM</td>
-                  <td className="p-3 text-[13px]">50</td>
-                  <td className="p-3 text-[13px]">5.87</td>
-                  <td className="p-3 text-[13px]">293.5</td>
-                  <td className="p-3 text-[13px]">11</td>
-                  <td className="p-3 text-[13px]">5</td>
-                  <td className="p-3 text-[13px]">REPAIR-ELECTRICAL</td>
-            
-                </tr>
-                <tr className="odd:bg-white even:bg-gray-100">
-                  <td className="p-3 text-[13px]">VAS1-V3-840A</td>
-                  <td className="p-3 text-[13px]">Crossbars, Black, PIO Set</td>
-                  <td className="p-3 text-[13px]">4</td>
-                  <td className="p-3 text-[13px]">7.76</td>
-                  <td className="p-3 text-[13px]">31.04</td>
-                  <td className="p-3 text-[13px]">17</td>
-                  <td className="p-3 text-[13px]">0</td>
-                  <td className="p-3 text-[13px]">ACCESSORY-ACCESSORY</td>
-            
-                </tr>
-                <tr className="odd:bg-white even:bg-gray-100">
-                  <td className="p-3 text-[13px]">VC67-V3-440</td>
-                  <td className="p-3 text-[13px]">Splash Guards, Front & Rear</td>
-                  <td className="p-3 text-[13px]">7</td>
-                  <td className="p-3 text-[13px]">20.7</td>
-                  <td className="p-3 text-[13px]">144.9</td>
-                  <td className="p-3 text-[13px]">10</td>
-                  <td className="p-3 text-[13px]">23</td>
-                  <td className="p-3 text-[13px]">ACCESSORY-ACCESSORY</td>
-            
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
-        <div className="pt-3 pb-8 mb-20 flex justify-center items-center gap-2 select-none">
-
-            <button className="px-4 py-1 text-gray-400">
-              &lt;
+        {/* NAVBAR */}
+        <nav className="w-full p-4 flex items-center text-[13px] text-gray-600 gap-8 font-medium border-b">
+          {["IDLE", "PRE_IDLE", "DROP_SHIP", "NORMAL"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => {
+                setActiveTab(tab);
+                setCurrentPage(1); // reset pagination when switching
+              }}
+              className={`hover:text-gray-900 transition ${
+                activeTab === tab ? "font-bold underline-offset" : ""
+              }`}
+            >
+              {tab.replace("_", " ")}
             </button>
+          ))}
+        </nav>
 
-            <button className="px-3 py-1  text-gray-400">
-              1
-            </button>
+        {/* PAGE CONTENT */}
+        <div className="flex-1 p-6">
+          <h2 className="text-xl font-semibold mb-2">
+            {activeTab.replace("_", " ")} PARTS LIST
+          </h2>
 
-            <button className="px-3 py-1  text-gray-400">
-              2
-            </button>
+          {loading ? (
+            <p className="text-center py-10 text-gray-500 font-medium">Loading tables...</p>
+          ) : data.length === 0? (
+            <p className="text-center py-10 text-gray-500 font-medium">NO DATA FOUND FOR {activeTab.replace("_", " ")}</p>
+          ) : (
+            <>
+              <div className="flex pt-2 pb-2">
+                <button 
+                  onClick={exportToExcel}
+                  className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-800">
+                  <img src="/src/assets/Excel.svg" alt="icon" />
+                  EXPORT TO EXCEL
+                </button>
+                <button 
+                  onClick={printTable}
+                  className="bg-black text-white py-2 px-4 rounded flex items-center gap-2 hover:bg-gray-800 ml-4">
+                  <img
+                    src="/src/assets/print.svg"
+                    alt="icon"
+                    style={{ width: "20px", height: "20px", marginRight: "4px" }}
+                  />
+                  PRINT
+                </button>
+              </div>
 
-            <button className="px-3 py-1  text-gray-400">
-              3
-            </button>
+              <table className="w-full whitespace-nowrap mb-0 border-shadow-sm">
+                <thead className="bg-[#2B2B2B] text-white">
+                  <tr>
+                    <th className="p-3 text-[13px] font-normal">Dealer Code</th>
+                    <th className="p-3 text-[13px] font-normal">Part Number</th>
+                    <th className="p-3 text-[13px] font-normal">Part Name</th>
+                    <th className="p-3 text-[13px] font-normal">Status</th>
+                  </tr>
+                </thead>
 
-            <button className="px-3 py-1  text-gray-400">
-              &gt;
-            </button>
+                <tbody className="divide-y">
+                  {currentEntries.map((item, index) => (
+                    <tr
+                      key={index}
+                      className={`${index % 2 === 0 ? "bg-white" : "bg-gray-100"}`}
+                    >
+                      <td className="px-4 py-2">{item.dealer_code}</td>
+                      <td className="px-4 py-2">{item.part_no}</td>
+                      <td className="px-4 py-2">{item.part_name}</td>
+                      <td className="px-4 py-2">{item.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-          </div>
+              {/* PAGINATION */}
+              <div className="pt-3 pb-8 mb-20 flex justify-center items-center gap-2 select-none">
+                <button
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded"
+                >
+                  {"<"}
+                </button>
+
+                {getPageNumbers().map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`px-3 py-1 border rounded ${
+                      page === currentPage ? "bg-black text-white" : ""
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded"
+                >
+                  {">"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
-    
-
-    </div>
   );
-}
+};
+  

@@ -246,3 +246,240 @@ def get_suggested_stocks_chart_data(
     except Exception as error:
         print(f"Error fetching suggested stocks data: {error}")
         raise HTTPException(status_code=500, detail="Error fetching data from database")
+
+
+@app.get("/api/idle-part-list", response_model=List[schemas.listModel])
+def get_idle_part_list_data(
+    dealer_code: str,
+    skip: int = 0,
+    limit: int = 100,
+    cursor=Depends(get_db)
+):
+
+    query = """
+        WITH CTE AS(
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,'IDLE' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status='I'--171
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,'PREIDLE' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status='P'--31
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,t2.part_state AS status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s and t2.part_state='RETIRED'--75
+        union
+        SELECT t1.dealer_code, t1.part_no,COALESCE(t2.part_name,'') as part_name,t2.part_state AS status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s and t2.part_state='DROPSHIP' --22
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_nameLEFT,'NORMAL' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status=''--2175
+        ),FINAL_CTE AS(
+        SELECT
+         dealer_code,
+         part_no,
+         part_name,
+         STRING_AGG(DISTINCT status,'-') AS status
+        FROM CTE 
+        GROUP BY dealer_code,part_no,part_name
+        )
+        SELECT 
+         dealer_code,
+         part_no,
+         part_name,
+         status 
+        FROM FINAL_CTE WHERE STATUS='IDLE'
+        ORDER BY part_no 
+    """
+
+    try:
+        cursor.execute(
+            query,
+            (dealer_code, dealer_code, dealer_code, dealer_code, dealer_code)
+        )
+        return cursor.fetchall()
+
+    except Exception as error:
+        print(f"Error fetching idle part list data: {error}")
+        raise HTTPException(status_code=500, detail="Error fetching data from database")
+
+
+@app.get("/api/pre-idle-part-list", response_model=List[schemas.listModel])
+def get_pre_idle_part_list_data(
+    dealer_code: str,
+    skip: int = 0,
+    limit: int = 100,
+    cursor=Depends(get_db)
+):
+
+    query = """
+        WITH CTE AS(
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,'IDLE' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status='I'--171
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,'PREIDLE' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status='P'--31
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,t2.part_state AS status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s and t2.part_state='RETIRED'--75
+        union
+        SELECT t1.dealer_code, t1.part_no,COALESCE(t2.part_name,'') as part_name,t2.part_state AS status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s and t2.part_state='DROPSHIP' --22
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_nameLEFT,'NORMAL' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status=''--2175
+        ),FINAL_CTE AS(
+        SELECT
+         dealer_code,
+         part_no,
+         part_name,
+         STRING_AGG(DISTINCT status,'-') AS status
+        FROM CTE 
+        GROUP BY dealer_code,part_no,part_name
+        )
+        SELECT 
+         dealer_code,
+         part_no,
+         part_name,
+         status 
+        FROM FINAL_CTE WHERE STATUS='PREIDLE'
+        ORDER BY part_no 
+    """
+
+    try:
+        cursor.execute(
+            query,
+            (dealer_code, dealer_code, dealer_code, dealer_code, dealer_code)
+        )
+        return cursor.fetchall()
+
+    except Exception as error:
+        print(f"Error fetching idle part list data: {error}")
+        raise HTTPException(status_code=500, detail="Error fetching data from database")
+
+@app.get("/api/drop-ship-part-list", response_model=List[schemas.listModel])
+def get_drop_ship_part_list_data(
+    dealer_code: str,
+    skip: int = 0,
+    limit: int = 100,
+    cursor=Depends(get_db)
+):
+
+    query = """
+        WITH CTE AS(
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,'IDLE' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status='I'--171
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,'PREIDLE' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status='P'--31
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,t2.part_state AS status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s and t2.part_state='RETIRED'--75
+        union
+        SELECT t1.dealer_code, t1.part_no,COALESCE(t2.part_name,'') as part_name,t2.part_state AS status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s and t2.part_state='DROPSHIP' --22
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_nameLEFT,'NORMAL' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status=''--2175
+        ),FINAL_CTE AS(
+        SELECT
+         dealer_code,
+         part_no,
+         part_name,
+         STRING_AGG(DISTINCT status,'-') AS status
+        FROM CTE 
+        GROUP BY dealer_code,part_no,part_name
+        )
+        SELECT 
+         dealer_code,
+         part_no,
+         part_name,
+         status 
+        FROM FINAL_CTE WHERE STATUS='DROPSHIP'
+        ORDER BY part_no 
+    """
+
+    try:
+        cursor.execute(
+            query,
+            (dealer_code, dealer_code, dealer_code, dealer_code, dealer_code)
+        )
+        return cursor.fetchall()
+
+    except Exception as error:
+        print(f"Error fetching idle part list data: {error}")
+        raise HTTPException(status_code=500, detail="Error fetching data from database")
+
+@app.get("/api/normal-part-list", response_model=List[schemas.listModel])
+def get_normal_part_list_data(
+    dealer_code: str,
+    skip: int = 0,
+    limit: int = 100,
+    cursor=Depends(get_db)
+):
+
+    query = """
+        WITH CTE AS(
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,'IDLE' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status='I'--171
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,'PREIDLE' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status='P'--31
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_name,t2.part_state AS status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s and t2.part_state='RETIRED'--75
+        union
+        SELECT t1.dealer_code, t1.part_no,COALESCE(t2.part_name,'') as part_name,t2.part_state AS status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s and t2.part_state='DROPSHIP' --22
+        union
+        SELECT t1.dealer_code,t1.part_no,COALESCE(t2.part_name,'') as part_nameLEFT,'NORMAL' as status
+        FROM public.dealer_daily_stock t1 LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
+        WHERE t1.dealer_code=%s AND t1.status=''--2175
+        ),FINAL_CTE AS(
+        SELECT
+         dealer_code,
+         part_no,
+         part_name,
+         STRING_AGG(DISTINCT status,'-') AS status
+        FROM CTE 
+        GROUP BY dealer_code,part_no,part_name
+        )
+        SELECT 
+         dealer_code,
+         part_no,
+         part_name,
+         status 
+        FROM FINAL_CTE WHERE STATUS='NORMAL'
+        ORDER BY part_no 
+    """
+
+    try:
+        cursor.execute(
+            query,
+            (dealer_code, dealer_code, dealer_code, dealer_code, dealer_code)
+        )
+        return cursor.fetchall()
+
+    except Exception as error:
+        print(f"Error fetching idle part list data: {error}")
+        raise HTTPException(status_code=500, detail="Error fetching data from database")
+   
+
+

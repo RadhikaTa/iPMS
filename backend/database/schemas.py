@@ -45,3 +45,17 @@ class Chart1(BaseModel):
 
     class Config:
         populate_by_name = True
+
+
+class listModel(BaseModel):
+    # This setup is clever and correct.
+    # id: str = Field(alias='part_no')
+
+    # These fields match your SQL query AND your React table
+    dealer_code: str
+    part_no: str
+    part_name: str
+    status: str
+
+    class Config:
+        populate_by_name = True

@@ -62,7 +62,7 @@ const [stockChartData, setStockChartData] = useState({
         labels: ["EXCLUDED_STOCK", "SUGGESTED_STOCK", "OTHERS_STOCK"],
         datasets: [
                 {
-                        data: [0,5,0],
+                        data: [0,0,0],
                         backgroundColor: ["#adb5bd", "#ff8800", "#ffcc00"],
                 },
         ],
