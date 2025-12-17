@@ -14,6 +14,7 @@ import Footer from "./components/Footer";
 import ChatbotFooter from './components/ChatbotFooter';
 import './App.css';
 import PartNumbersQuantityPrediction from './components/PartNumbersQuantityPrediction';
+import InventoryHealthInfo from './components/InventoryHealthInfo';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/part-numbers-quantity-prediction" element={<PartNumbersQuantityPrediction />} />
+          <Route path="/inventory-health-info" element={<InventoryHealthInfo />} />
           <Route path="/idle-parts" element={<IdlePartsList />} />
           <Route path="/inquire-availability" element={<PartsInquiry />} />
           <Route path="/stock-order" element={<StockOrder />} />

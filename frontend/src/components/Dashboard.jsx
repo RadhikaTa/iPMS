@@ -10,6 +10,7 @@ import Print from "../assets/Print.svg";
 import Returnable from "../assets/Returnable.svg";
 import Collision from "../assets/Collision.svg";
 import Scrap from "../assets/Scrap.svg";
+import { Link } from "react-router-dom";
 
 // ===================== CHART.JS PLUGIN DEFINITION (TOTAL IN CENTER) =====================
 const doughnutLabelsPlugin = {
@@ -40,6 +41,8 @@ const doughnutLabelsPlugin = {
 ChartJS.register(ArcElement, Tooltip, Legend, doughnutLabelsPlugin);
 
 const Dashboard = () => {
+
+
     const [selectedItems, setSelectedItems] = useState([]);
     const [partsData, setPartsData] = useState([]);
     const [inventoryChartData, setInventoryChartData] = useState({
@@ -52,12 +55,25 @@ const Dashboard = () => {
         ],
     });
 
+    // Stock chart state (initial values mirror the previous hardcoded data)
+    const [stockChartData, setStockChartData] = useState({
+        labels: ["EXCLUDED_STOCK", "SUGGESTED_STOCK", "OTHERS_STOCK"],
+        datasets: [
+            {
+                data: [0, 0, 0],
+                backgroundColor: ["#adb5bd", "#ff8800", "#ffcc00"],
+            },
+        ],
+    });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const rowsPerPage = 10;
+
+
 
     // Colors
     const donatColor = {
@@ -66,33 +82,29 @@ const Dashboard = () => {
         "IDLE": "#ffc107",
         "PREIDLE": "#d63384",
         "IDLE-RETIRED": "#adb5bd",
+        "SUGGESTED_STOCK": "#ff8800",
+        "EXCLUDED_STOCK": "#adb5bd",
+        "OTHERS_STOCK": "#ffcc00",
     };
 
-    // Stock Chart (Static)
-    const stockDataSource = [
-        { label: "OTHERS", count: 1541, donatcolor: "#ffcc00" },
-        { label: "SUGGESTED", count: 476, donatcolor: "#ff8800" },
-        { label: "EXCLUDED", count: 245, donatcolor: "#adb5bd" },
-    ];
-    const stockChartData = {
-        labels: stockDataSource.map((i) => i.label),
-        datasets: [
-            {
-                data: stockDataSource.map((i) => i.count),
-                backgroundColor: stockDataSource.map((i) => i.donatcolor),
-            },
-        ],
-    };
 
-    const DEALER_CODE = typeof window !== 'undefined' ? localStorage.getItem("dealer_code") || "10131" : "10131"; 
+    // Fallback data source for suggested stocks (kept for reference)
+    //        const stockDataSource = [
+    //                { label: "OTHERS", count: 1541, donatcolor: "#ffcc00" },
+    //                { label: "SUGGESTED", count: 476, donatcolor: "#ff8800" },
+    //                { label: "EXCLUDED", count: 245, donatcolor: "#adb5bd" },
+    //        ];
+    //
+    // ⚠️ Define the required dealer code here (outside the useEffects for better scope)
+    const DEALER_CODE = typeof window !== 'undefined' ? localStorage.getItem("dealer_code") || "10131" : "10131";
 
     // ===================== FETCH EFFECTS (UNCHANGED) =====================
     useEffect(() => {
         const fetchParts = async () => {
             try {
                 const url = `http://127.0.0.1:8000/api/parts?dealer_code=${DEALER_CODE}`;
-                const response = await fetch(url); 
-                
+                const response = await fetch(url);
+
                 if (!response.ok)
                     throw new Error(`Parts API error! status: ${response.status}`);
 
@@ -104,8 +116,8 @@ const Dashboard = () => {
             }
         };
         fetchParts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [DEALER_CODE]); 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [DEALER_CODE]);
 
     useEffect(() => {
         const fetchInventoryHealth = async () => {
@@ -119,51 +131,105 @@ const Dashboard = () => {
 
                 const data = await response.json();
 
-                if (data && Array.isArray(data)) {
+ const response = await fetch(url);
+ if (!response.ok)
+          throw new Error(
+            `Inventory Health API error! status: ${response.status}`
+          );
+
+        const data = await response.json();
+
+        if (data && Array.isArray(data)) {
+          const newChartData = {
+            labels: data.map((item) => item.status.toUpperCase()),
+            datasets: [
+              {
+                data: data.map((item) => item.part_count),
+                backgroundColor: data.map(
+                  (item) => donatColor[item.status.toUpperCase()] || "#cccccc"
+                ),
+              },
+            ],
+          };
+          setInventoryChartData(newChartData);
+        }
+      } catch (err) {
+        console.error("Error fetching inventory health:", err);
+      } finally {
+        // Keep isLoading set here only if you want the loading spinner
+        // to disappear only after *both* fetches complete.
+        // For simplicity, I'll keep it here, assuming partsData is less critical
+        // for initial dashboard rendering.
+        setIsLoading(false);
+      }
+    };
+
+    fetchInventoryHealth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [DEALER_CODE]); // 🎯 Added dependency on DEALER_CODE
+// ... (rest of the component) ...
+
+
+    //====================FETCH SUGGESTED STOCKS DATA=====================
+    // ================== FETCH SUGGESTED STOCKS DATA ===================
+    useEffect(() => {
+        const fetchSuggestedStocks = async () => {
+            try {
+                const url = `http://127.0.0.1:8000/api/suggested-stocks?dealer_code=${DEALER_CODE}`;
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (Array.isArray(data)) {
                     const newChartData = {
-                        labels: data.map((item) => item.status.toUpperCase()),
+                        labels: data.map(item => item.category.toUpperCase()),
+
                         datasets: [
                             {
-                                data: data.map((item) => item.part_count),
+                                data: data.map(item => item.items_count),
                                 backgroundColor: data.map(
-                                    (item) => donatColor[item.status.toUpperCase()] || "#cccccc"
+                                    item => donatColor[item.category.toUpperCase()] || "#ccc"
                                 ),
                             },
                         ],
                     };
-                    setInventoryChartData(newChartData);
+
+                    setStockChartData(newChartData);
                 }
             } catch (err) {
-                console.error("Error fetching inventory health:", err);
+                console.error("Error fetching Suggested Stocks:", err);
             } finally {
-                setIsLoading(false); 
+                setIsLoading(false);
             }
         };
-        fetchInventoryHealth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [DEALER_CODE]); 
 
+        fetchSuggestedStocks();
+    }, [DEALER_CODE]);
+    // 🎯 Added dependency on DEALER_CODE
+    // ... (rest of the component) ...
 
-    // ===================== CHART OPTIONS (UNCHANGED) =====================
+    // ===================== CHART OPTIONS =====================
     const doughnutOptions = {
         plugins: {
-            legend: {
-                display: false,
-            },
+            legend: { display: false },
             tooltip: {
                 callbacks: {
                     label: function (ctx) {
-                        let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                        let percentage = ((ctx.raw / total) * 100).toFixed(2);
+                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((ctx.raw / total) * 100).toFixed(2);
                         return `${ctx.label}: ${ctx.raw} (${percentage}%)`;
                     },
                 },
             },
-            doughnutLabels: true,
         },
-        cutout: "85%", 
-        maintainAspectRatio: false, 
+        cutout: "85%",
+        maintainAspectRatio: false,
     };
+
 
     // ===================== PAGINATION (UNCHANGED) =====================
     const indexOfLastRow = currentPage * rowsPerPage;
@@ -225,10 +291,10 @@ const Dashboard = () => {
     // ===================== RENDER UI (RESPONSIVE CHANGES) =====================
     return (
         <div className="p-4 md:p-6 bg-white overflow-y-auto min-h-screen text-sm">
-            
+
             {/* 1. TOP CARDS: Responsive Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                
+
                 {/* Control Panel (No change needed) */}
                 <div className="border p-4 rounded shadow-sm">
                     <h2 className="font-bold text-sm mb-2 uppercase">Generate Graphs</h2>
@@ -257,10 +323,10 @@ const Dashboard = () => {
                 {/* 2. Inventory Health Chart: Changed flex to allow stacking on mobile (flex-col) */}
                 <div className="border p-4 rounded shadow-sm">
                     <h2 className="font-bold text-sm uppercase mb-2 text-center">Inventory Health</h2>
-                    
+
                     {/* 👇 CHANGE: Added flex-col for mobile, changed to flex-row on medium screens */}
                     <div className="flex flex-col items-center md:flex-row md:items-start gap-4">
-                        
+
                         {/* Chart Container: Reduced base width for very small screens */}
                         <div className="w-32 h-32 sm:w-40 sm:h-40 relative flex-shrink-0">
                             <Doughnut data={inventoryChartData} options={doughnutOptions} />
@@ -281,7 +347,7 @@ const Dashboard = () => {
 
                     {/* 👇 CHANGE: Added flex-col for mobile, changed to flex-row on medium screens */}
                     <div className="flex flex-col items-center md:flex-row md:items-start gap-4">
-                        
+
                         {/* Doughnut Chart: Reduced base width for very small screens */}
                         <div className="w-32 h-32 sm:w-40 sm:h-40 relative flex-shrink-0">
                             <Doughnut data={stockChartData} options={doughnutOptions} />
@@ -302,185 +368,195 @@ const Dashboard = () => {
                         <h2 className="font-bold text-sm uppercase">Tips</h2>
                     </div>
 
-                    <ul className="list-disc pl-5 text-red-600 font-medium text-sm space-y-1">
-                        <li>Suggested Stocks Below RDP 38</li>
-                        <li>Idle Inventory &gt; 2%</li>
-                        <li>Pre Idle Inventory &gt; 2%</li>
-                    </ul>
-                </div>
-            </div>
 
-            {/* 4. ACTION BAR: Use flex-wrap on mobile */}
-            <div className="flex flex-col lg:flex-row justify-between gap-4 mb-4">
-                
-                {/* Buttons: Use flex-wrap on small screens */}
-                <div className="flex flex-wrap gap-2">
-                    <button className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-800 text-xs sm:text-sm">
-                        <img src={Excel} className="w-4 h-4" alt="Excel" />
-                        Export to Excel
-                    </button>
+                    {/* Inventory Health Chart */}
+                    <Link to="/inventory-health-info">
+                        <div className="border p-4 rounded shadow-sm items-center gap-6">
+                            <h2 className="font-bold text-sm uppercase mb-2 text-center">Inventory Health</h2>
+                            <div className="flex">
+                                <div className="w-40 h-40 relative m-4 ">
+                                    <h2 className="font-bold text-sm uppercase mb-2 absolute top-2 left-4 sr-only">Inventory Health</h2> {/* Title hidden for layout but good for accessibility/print */}
+                                    <Doughnut data={inventoryChartData} options={doughnutOptions} />
+                                </div>
 
-                    <button className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-800 text-xs sm:text-sm">
-                        <img src={Print} className="w-4 h-4" alt="Print" />
-                        Print
-                    </button>
-                </div>
 
-                {/* Legends: Ensure good spacing with flex-wrap */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium">
-                    <span className="font-bold">LEGENDS:</span>
+                                {/* 4. ACTION BAR: Use flex-wrap on mobile */}
+                                < div className="flex flex-col lg:flex-row justify-between gap-4 mb-4" >
 
-                    <span className="flex items-center gap-1">
-                        Returnable
-                        <img src={Returnable} className="w-4 h-4" alt="Returnable" />
-                    </span>
+                                    {/* Buttons: Use flex-wrap on small screens */}
+                                    < div className="flex flex-wrap gap-2" >
+                                        <button className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-800 text-xs sm:text-sm">
+                                            <img src={Excel} className="w-4 h-4" alt="Excel" />
+                                            Export to Excel
+                                        </button>
 
-                    <span className="flex items-center gap-1">
-                        Collision
-                        <img src={Collision} className="w-4 h-4" alt="Collision" />
-                    </span>
+                                        <button className="bg-black text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-gray-800 text-xs sm:text-sm">
+                                            <img src={Print} className="w-4 h-4" alt="Print" />
+                                            Print
+                                        </button>
+                                    </div >
+                                </div>
+                            </div>
+                        </div>
+                    </Link>
 
-                    <span className="flex items-center gap-1">
-                        Scrap
-                        <img src={Scrap} className="w-4 h-4" alt="Scrap" />
-                    </span>
-                </div>
+                    {/* Legends: Ensure good spacing with flex-wrap */}
+                    < div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium" >
+                        <span className="font-bold">LEGENDS:</span>
 
-            </div>
+                        <span className="flex items-center gap-1">
+                            Returnable
+                            <img src={Returnable} className="w-4 h-4" alt="Returnable" />
+                        </span>
 
-            {/* 5. DATA TABLE: Scrollable Wrapper */}
-            {/* The overflow-x-auto on the wrapper is crucial to handle the min-w-[1200px] table */}
-            <div className="overflow-x-auto border border-gray-300 rounded-lg shadow-sm">
-                <table className="min-w-[1200px] w-full border-collapse text-xs">
-                    <thead>
-                        <tr className="bg-[#2B2B2B] text-white uppercase h-11">
-                            <th className="px-3 py-2 text-left border w-12">
-                                <input type="checkbox" className="accent-white" />
-                            </th>
+                        <span className="flex items-center gap-1">
+                            Collision
+                            <img src={Collision} className="w-4 h-4" alt="Collision" />
+                        </span>
 
-                            {["Part No", "Part Name", "Status"].map((heading, index) => (
-                                <th
-                                    key={index}
-                                    className="px-3 py-2 text-left border whitespace-nowrap"
-                                >
-                                    {heading}
+                        <span className="flex items-center gap-1">
+                            Scrap
+                            <img src={Scrap} className="w-4 h-4" alt="Scrap" />
+                        </span>
+                    </div >
+
+                </div >
+
+                {/* 5. DATA TABLE: Scrollable Wrapper */}
+                {/* The overflow-x-auto on the wrapper is crucial to handle the min-w-[1200px] table */}
+                <div className="overflow-x-auto border border-gray-300 rounded-lg shadow-sm">
+                    <table className="min-w-[1200px] w-full border-collapse text-xs">
+                        <thead>
+                            <tr className="bg-[#2B2B2B] text-white uppercase h-11">
+                                <th className="px-3 py-2 text-left border w-12">
+                                    <input type="checkbox" className="accent-white" />
                                 </th>
-                            ))}
-                        </tr>
-                    </thead>
 
-                    <tbody className="bg-white">
-                        {/* ... (Table Body remains the same) ... */}
-                        {currentParts.length > 0 ? (
-                            currentParts.map((item, idx) => (
-                                <tr
-                                    key={item.id || idx}
-                                    className="h-11 hover:bg-gray-50 transition"
-                                >
-                                    <td className="border px-3 py-2 text-center">
-                                        <input
-                                            type="checkbox"
-                                            className="accent-black"
-                                            checked={selectedItems.includes(item.id)}
-                                            onChange={() => handleSelectItem(item.id)}
-                                        />
-                                    </td>
+                                {["Part No", "Part Name", "Status"].map((heading, index) => (
+                                    <th
+                                        key={index}
+                                        className="px-3 py-2 text-left border whitespace-nowrap"
+                                    >
+                                        {heading}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
 
-                                    <td className="border px-3 py-2 font-medium">{item.part_no}</td>
-                                    <td className="border px-3 py-2">{item.part_name}</td>
+                        <tbody className="bg-white">
+                            {/* ... (Table Body remains the same) ... */}
+                            {currentParts.length > 0 ? (
+                                currentParts.map((item, idx) => (
+                                    <tr
+                                        key={item.id || idx}
+                                        className="h-11 hover:bg-gray-50 transition"
+                                    >
+                                        <td className="border px-3 py-2 text-center">
+                                            <input
+                                                type="checkbox"
+                                                className="accent-black"
+                                                checked={selectedItems.includes(item.id)}
+                                                onChange={() => handleSelectItem(item.id)}
+                                            />
+                                        </td>
 
-                                    <td className="border px-3 py-2 text-center">
-                                        <span
-                                            className="px-2 py-0.5 rounded text-white text-[10px]"
-                                            style={{ backgroundColor: donatColor[item.status?.toUpperCase()] || "#999" }}
-                                        >
-                                            {item.status}
-                                        </span>
+                                        <td className="border px-3 py-2 font-medium">{item.part_no}</td>
+                                        <td className="border px-3 py-2">{item.part_name}</td>
+
+                                        <td className="border px-3 py-2 text-center">
+                                            <span
+                                                className="px-2 py-0.5 rounded text-white text-[10px]"
+                                                style={{ backgroundColor: donatColor[item.status?.toUpperCase()] || "#999" }}
+                                            >
+                                                {item.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="12" className="text-center py-4 text-gray-500">
+                                        No parts data available.
                                     </td>
                                 </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="12" className="text-center py-4 text-gray-500">
-                                    No parts data available.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* 6. PAGINATION (No change needed) */}
-            {totalPages > 1 && (
-                <div className="flex justify-center mt-4">
-                    <ul className="flex gap-2 text-sm items-center">
-                        <li>
-                            <button
-                                onClick={goToPrevPage}
-                                disabled={currentPage === 1}
-                                className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
-                            >
-                                &lt; Prev
-                            </button>
-                        </li>
-
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                            const isFirst = page === 1;
-                            const isLast = page === totalPages;
-                            const isCurrent = page === currentPage;
-                            const isNearCurrent = Math.abs(currentPage - page) <= 2;
-
-                            if (totalPages > 10 && !isFirst && !isLast && !isCurrent && !isNearCurrent) {
-                                if (page === currentPage - 3 || page === currentPage + 3) {
-                                    return <li key={`ellipsis-${page}`} className="text-gray-500">...</li>;
-                                }
-                                return null;
-                            }
-
-                            return (
-                                <li
-                                    key={page}
-                                    className={`px-3 py-1 border rounded cursor-pointer ${page === currentPage
-                                        ? "bg-black text-white"
-                                        : "hover:bg-gray-100"
-                                        }`}
-                                    onClick={() => setCurrentPage(page)}
-                                >
-                                    {page}
-                                </li>
-                            );
-                        })}
-
-                        <li>
-                            <button
-                                onClick={goToNextPage}
-                                disabled={currentPage === totalPages}
-                                className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
-                            >
-                                Next &gt;
-                            </button>
-                        </li>
-                    </ul>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
-            )}
 
-            {/* 7. BOTTOM BUTTONS: Use flex-wrap to prevent overflow */}
-            <div className="flex flex-wrap justify-center gap-4 mt-6 pb-6">
-                <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 text-xs sm:text-sm">
-                    Generate Data File
-                </button>
-                <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 text-xs sm:text-sm">
-                    Transfer to VOR
-                </button>
-                <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 text-xs sm:text-sm">
-                    Transfer to Stock Order
-                </button>
-                <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 text-xs sm:text-sm">
-                    Reset
-                </button>
-            </div>
-        </div>
-    );
+                {/* 6. PAGINATION (No change needed) */}
+                {
+                    totalPages > 1 && (
+                        <div className="flex justify-center mt-4">
+                            <ul className="flex gap-2 text-sm items-center">
+                                <li>
+                                    <button
+                                        onClick={goToPrevPage}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
+                                    >
+                                        &lt; Prev
+                                    </button>
+                                </li>
+
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                    const isFirst = page === 1;
+                                    const isLast = page === totalPages;
+                                    const isCurrent = page === currentPage;
+                                    const isNearCurrent = Math.abs(currentPage - page) <= 2;
+
+                                    if (totalPages > 10 && !isFirst && !isLast && !isCurrent && !isNearCurrent) {
+                                        if (page === currentPage - 3 || page === currentPage + 3) {
+                                            return <li key={`ellipsis-${page}`} className="text-gray-500">...</li>;
+                                        }
+                                        return null;
+                                    }
+
+                                    return (
+                                        <li
+                                            key={page}
+                                            className={`px-3 py-1 border rounded cursor-pointer ${page === currentPage
+                                                ? "bg-black text-white"
+                                                : "hover:bg-gray-100"
+                                                }`}
+                                            onClick={() => setCurrentPage(page)}
+                                        >
+                                            {page}
+                                        </li>
+                                    );
+                                })}
+
+                                <li>
+                                    <button
+                                        onClick={goToNextPage}
+                                        disabled={currentPage === totalPages}
+                                        className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50"
+                                    >
+                                        Next &gt;
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    )
+                }
+
+                {/* 7. BOTTOM BUTTONS: Use flex-wrap to prevent overflow */}
+                <div className="flex flex-wrap justify-center gap-4 mt-6 pb-6">
+                    <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 text-xs sm:text-sm">
+                        Generate Data File
+                    </button>
+                    <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 text-xs sm:text-sm">
+                        Transfer to VOR
+                    </button>
+                    <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 text-xs sm:text-sm">
+                        Transfer to Stock Order
+                    </button>
+                    <button className="bg-black text-white px-6 py-2 rounded hover:bg-gray-800 text-xs sm:text-sm">
+                        Reset
+                    </button>
+                </div>
+            </div >
+            );
 };
 
-export default Dashboard;
+            export default Dashboard;
