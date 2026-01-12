@@ -1,0 +1,153 @@
+import React from 'react';
+import iAI from '../assets/iAI.png';
+import UserIcon from '../assets/user-icon.png';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
+import { useSidebar } from './MainLayout';
+import User2 from '../assets/User2.svg';
+import InterraIT_NEW from '../assets/InterraIT_NEW.png';
+
+// Sidebar sections
+const sections = [
+  {
+    title: 'PARTS ORDER',
+    items: [
+      { label: 'Suggested Stocks', path: '/' },
+      { label: 'iAI Prediction', path: '/part-numbers-quantity-prediction' },
+      { label: 'Inquire Availability', path: '/inquire-availability' },
+      { label: 'VOR Order', path: '/vor-order' },
+      { label: 'Order Inquiry', path: '/order-inquiry' },
+      { label: 'Stock Order', path: '/stock-order' },
+      { label: 'View Stock Order', path: '/view-stock-order' },
+      { label: 'Manage Backorders', path: '/manage-backorders' },
+      { label: 'Inquire Parts Orders', path: '/inquire-parts-orders' },
+    ],
+  },
+  { title: 'PARTS RETURN', items: [] },
+  { title: 'VEHICLE ORDER', items: [] },
+  { title: 'SALES', items: [] },
+  { title: 'INCENTIVES', items: [] },
+  { title: 'SERVICE', items: [] },
+  { title: 'CLAIM AUTHORIZATION', items: [] },
+  { title: 'MARKETING / CUSTOMER', items: [] },
+];
+
+const Header = () => {
+  const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Current dealer code
+  const currentDealerCode = localStorage.getItem("dealerCode") || "10131";
+
+  return (
+    <>
+      {/* ===== Header Bar ===== */}
+      <header className="w-full h-[70px] bluebgColour flex items-center justify-between px-4 md:px-6 lg:px-8 shadow-sm z-30 fixed top-0 left-0 right-0">
+        
+        {/* Left: Hamburger + Logo */}
+        <div className="flex items-center gap-4 md:gap-6">
+          
+          {/* Hamburger */}
+          <button
+            className="text-white"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+
+          {/* Logo */}
+          <img
+            src={InterraIT_NEW}
+            alt="Interra Logo"
+            className="w-5 h-5 rounded-[3px] p-1.5 bg-white md:w-[100px] md:h-[36px] lg:w-[168px] lg:h-[36px] sm:w-[90px] sm:h-[36px]"
+          />
+
+          {/* Title */}
+          <h1 className="font-sans font-bold text-[24px] leading-[33px] tracking-[2.4px] text-white">
+            iPMS
+          </h1>
+        </div>
+
+        {/* Right: User Info */}
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="text-white font-mazda uppercase text-sm text-center leading-tight">
+            Radhika Tayal
+            <br />
+            <span className="text-black">
+              <select
+                value={currentDealerCode}
+                onChange={(e) => {
+                  localStorage.setItem("dealerCode", e.target.value);
+                  window.location.reload();
+                }}
+              >
+                <option value="10131">10131</option>
+                <option value="23454">23454</option>
+                <option value="23925">23925</option>
+                <option value="34318">34318</option>
+                <option value="51485">51485</option>
+                <option value="83314">83314</option>
+              </select>
+            </span>
+          </div>
+
+          <img
+            src={User2}
+            alt="User Icon"
+            className="w-[30px] h-[30px] md:w-[24px] md:h-[24px] lg:w-[26px] lg:h-[26px]"
+          />
+        </div>
+      </header>
+
+      {/* ===== Sidebar ===== */}
+      <aside
+        className={`fixed top-[70px] left-0 h-full bg-[#2D3C50] z-20 font-mazda overflow-y-auto shadow-lg transition-all duration-300 ease-in-out
+        ${isSidebarOpen ? 'translate-x-0 w-[220px]' : '-translate-x-full md:translate-x-0 md:w-0'}`}
+      >
+        {isSidebarOpen && (
+          <div className="w-[220px]">
+            {sections.map((section, index) => (
+              <div key={index}>
+                
+                {/* Section Title */}
+                <div className="h-[55px] flex items-center px-5 text-[13px] font-bold text-[#969EA8] border-b border-[#3A3A3A] tracking-widest">
+                  {section.title}
+                </div>
+
+                {/* Section Items */}
+                <div className="flex flex-col">
+                  {(section.items || []).map((item, idx) => {
+                    const isActive =
+                      location.pathname === item.path ||
+                      (item.label === 'Suggested Stocks' && location.pathname === '/');
+
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          navigate(item.path);
+                          if (window.innerWidth < 768) setIsSidebarOpen(false);
+                        }}
+                        className={`text-left text-[13px] font-medium tracking-wide px-6 py-3 transition-all
+                          ${isActive
+                            ? 'bg-[#6C7785] text-white'
+                            : 'text-white/60 hover:bg-[#3b3b3b] hover:text-white'
+                          }`}
+                      >
+                        • {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+              </div>
+            ))}
+          </div>
+        )}
+      </aside>
+    </>
+  );
+};
+
+export default Header;

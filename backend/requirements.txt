@@ -1,0 +1,15 @@
+Flask==2.1.2
+Flask-Cors==5.0.1
+pandas
+numpy
+xgboost
+scikit-learn
+sqlalchemy
+psycopg2-binary
+python-dotenv
+seaborn
+matplotlib
+fastapi
+pydantic
+
+
