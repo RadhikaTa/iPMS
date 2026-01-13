@@ -217,7 +217,7 @@ const Dashboard = () => {
             },
             doughnutLabels: true,
         },
-        cutout: "85%",
+        cutout: "88%",
         maintainAspectRatio: false,
     };
 
@@ -304,8 +304,8 @@ const Dashboard = () => {
                             Idle & Pre Idle Inventory Trends
                         </label>
                     </div>
-
-                    <button className="bluebgColour text-white w-full py-2 mt-4 rounded-[3px] hover:bg-blue-900">
+                    <br />
+                    <button className="bluebgColour text-white px-4 py-2.5 rounded-[5px] flex items-center gap-2 hover:bg-blue-900 text-[13px] sm:text-sm">
                         Generate Report
                     </button>
                 </div>

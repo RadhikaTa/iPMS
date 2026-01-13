@@ -5,8 +5,8 @@ import { Link } from "react-router-dom";
 /* ----------------- CONSTANTS ----------------- */
 
 const allMonths = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 const spinnerPathD = "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z";
@@ -26,6 +26,10 @@ export default function PartNumbersQuantityPrediction() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkError, setBulkError] = useState("");
   const [top100Data, setTop100Data] = useState([]);
+
+  // PAGINATION STATES
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
 
   const updateItemByKey = (key, updates) => {
     setOrderData((prev) => prev.map((i) => (i.key === key ? { ...i, ...updates } : i)));
@@ -80,6 +84,7 @@ export default function PartNumbersQuantityPrediction() {
     setBulkLoading(true);
     setBulkError("");
     setTop100Data([]);
+    setCurrentPage(1); // Reset to first page on new search
 
     try {
       const res = await axios.get(`http://127.0.0.1:8000/api/top100-parts?dealer_code=${dealerCode}&month=${selectedMonth}`);
@@ -92,16 +97,29 @@ export default function PartNumbersQuantityPrediction() {
     }
   };
 
+  // ===================== PAGINATION LOGIC =====================
+  const indexOfLastRow = currentPage * rowsPerPage;
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+  const partsArray = Array.isArray(top100Data) ? top100Data : [];
+  const currentParts = partsArray.slice(indexOfFirstRow, indexOfLastRow);
+  const totalPages = Math.ceil(partsArray.length / rowsPerPage);
+
+  const goToNextPage = () =>
+    setCurrentPage((page) => (page < totalPages ? page + 1 : page));
+  const goToPrevPage = () =>
+    setCurrentPage((page) => (page > 1 ? page - 1 : page));
+
+
   const headerStyle = "px-4 py-2 font-bold border border-[#E0E0E0] h-[66px] text-white bg-[#2B2B2B] text-left uppercase tracking-wider text-[13px]";
 
   return (
     <div className="w-full px-4 sm:px-6 pt-6 pb-10 font-mazda bg-[#ECEFF1] min-h-screen">
 
-       <Link to="/" className="font-bold text-sm p-3 underline">
-          RETURN TO DASHBOARD
-        </Link>
-        <br />
-        <br />
+      <Link to="/" className="font-bold text-sm p-3 underline">
+        RETURN TO DASHBOARD
+      </Link>
+      <br />
+      <br />
       {/* HEADER */}
       <h1 className="text-[18px] font-bold text-[#101010] mb-6 uppercase tracking-wider">
         Prediction Dashboard
@@ -191,12 +209,9 @@ export default function PartNumbersQuantityPrediction() {
       </div>
 
       {/* SINGLE TABLE */}
-      {/* SINGLE TABLE */}
       {predictionMode === "single" && orderData.length > 0 && (
         <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200 mb-6">
           <table className="w-full min-w-[900px] text-xs border-collapse font-sans">
- 
-            {/* TABLE HEADER */}
             <thead>
               <tr className="sticky top-0 z-10 h-[66px] bg-[#2953CD] text-white">
                 {["Dealer Code", "Part Number", "PI Suggested Stock", "iAI Prediction"].map(
@@ -207,19 +222,8 @@ export default function PartNumbersQuantityPrediction() {
                     >
                       <div className="flex items-center justify-center gap-2 cursor-pointer">
                         <span>{heading}</span>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={2}
-                          stroke="currentColor"
-                          className="w-3 h-3 opacity-80"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                          />
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3 opacity-80">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                         </svg>
                       </div>
                     </th>
@@ -227,47 +231,27 @@ export default function PartNumbersQuantityPrediction() {
                 )}
               </tr>
             </thead>
- 
-            {/* TABLE BODY */}
             <tbody className="bg-white">
               {orderData.map((i, idx) => (
                 <tr
                   key={i.key}
-                  className={`${idx % 2 === 0 ? "bg-[#FFFFFF]" : "bg-[#ECEFF1]"
-                    } hover:bg-blue-50 transition-colors duration-150 border-b border-gray-100 h-[60px] text-[13px]`}
+                  className={`${idx % 2 === 0 ? "bg-[#FFFFFF]" : "bg-[#ECEFF1]"} hover:bg-blue-50 transition-colors duration-150 border-b border-gray-100 h-[60px] text-[13px]`}
                 >
-                  {/* Dealer Code */}
-                  <td className="px-4 py-3 text-center text-[#101010] font-medium">
-                    {i.dealer_code}
-                  </td>
- 
-                  {/* Part Number */}
-                  <td className="px-4 py-3 text-center text-[#101010] font-medium">
-                    {i.partNumber}
-                  </td>
- 
-                  {/* PI Suggested Stock */}
-                  <td className="px-4 py-3 text-center text-[#101010]">
-                    {i.piPrediction}
-                  </td>
- 
-                  {/* iAI Prediction */}
-                  <td className="px-4 py-3 text-center font-semibold text-red-600">
-                    {i.iaiPrediction}
-                  </td>
+                  <td className="px-4 py-3 text-center text-[#101010] font-medium">{i.dealer_code}</td>
+                  <td className="px-4 py-3 text-center text-[#101010] font-medium">{i.partNumber}</td>
+                  <td className="px-4 py-3 text-center text-[#101010]">{i.piPrediction}</td>
+                  <td className="px-4 py-3 text-center font-semibold text-red-600">{i.iaiPrediction}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
- 
+
       {/* BULK TABLE */}
       {predictionMode === "bulk" && top100Data.length > 0 && (
         <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
           <table className="w-full min-w-[900px] text-xs border-collapse font-sans">
- 
-            {/* TABLE HEADER */}
             <thead>
               <tr className="sticky top-0 z-10 h-[66px] bg-[#2953CD] text-white">
                 {["Rank", "Part Number", "iAI Monthly Prediction", "PI Suggested Stock"].map(
@@ -278,19 +262,8 @@ export default function PartNumbersQuantityPrediction() {
                     >
                       <div className="flex items-center justify-center gap-2 cursor-pointer">
                         <span>{heading}</span>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={2}
-                          stroke="currentColor"
-                          className="w-3 h-3 opacity-80"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                          />
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3 opacity-80">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                         </svg>
                       </div>
                     </th>
@@ -298,38 +271,77 @@ export default function PartNumbersQuantityPrediction() {
                 )}
               </tr>
             </thead>
- 
-            {/* TABLE BODY */}
             <tbody className="bg-white">
-              {top100Data.map((i, idx) => (
+              {currentParts.map((i, idx) => (
                 <tr
                   key={i.item_no}
-                  className={`${idx % 2 === 0 ? "bg-[#FFFFFF]" : "bg-[#ECEFF1]"
-                    } hover:bg-blue-50 transition-colors duration-150 border-b border-gray-100 h-[60px] text-[13px]`}
+                  className={`${idx % 2 === 0 ? "bg-[#FFFFFF]" : "bg-[#ECEFF1]"} hover:bg-blue-50 transition-colors duration-150 border-b border-gray-100 h-[60px] text-[13px]`}
                 >
-                  {/* Rank */}
                   <td className="px-4 py-3 text-center font-semibold text-[#101010]">
-                    {idx + 1}
+                    {indexOfFirstRow + idx + 1}
                   </td>
- 
-                  {/* Part Number */}
-                  <td className="px-4 py-3 text-center text-[#101010] font-medium">
-                    {i.item_no}
-                  </td>
- 
-                  {/* iAI Monthly Prediction */}
+                  <td className="px-4 py-3 text-center text-[#101010] font-medium">{i.item_no}</td>
                   <td className="px-4 py-3 text-center font-semibold text-red-600">
                     {Math.round(i.predicted_monthly)}
                   </td>
- 
-                  {/* PI Suggested Stock */}
-                  <td className="px-4 py-3 text-center text-[#101010]">
-                    {i.pe_suggested_stock_qty}
-                  </td>
+                  <td className="px-4 py-3 text-center text-[#101010]">{i.pe_suggested_stock_qty}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* PAGINATION SECTION */}
+      {predictionMode === "bulk" && totalPages > 1 && (
+        <div className="flex justify-center mt-4">
+          <ul className="flex gap-2 text-bold items-center">
+            <li>
+              <button
+                onClick={goToPrevPage}
+                disabled={currentPage === 1}
+                className="px-3 py-1 hover:text-[#2953CD] font-bold"
+              >
+                &lt;
+              </button>
+            </li>
+
+            {(() => {
+              let pages = [];
+              if (totalPages <= 3) {
+                pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+              } else if (currentPage === 1) {
+                pages = [1, 2, 3];
+              } else if (currentPage === totalPages) {
+                pages = [totalPages - 2, totalPages - 1, totalPages];
+              } else {
+                pages = [currentPage - 1, currentPage, currentPage + 1];
+              }
+
+              return pages.map((page) => (
+                <li
+                  key={page}
+                  className={`px-3 py-1 cursor-pointer font-bold ${page === currentPage
+                    ? "border-b-2 border-[#2953CD] text-[#2953CD]"
+                    : "hover:text-[#2953CD]"
+                    }`}
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </li>
+              ));
+            })()}
+
+            <li>
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 hover:text-[#2953CD] font-bold"
+              >
+                &gt;
+              </button>
+            </li>
+          </ul>
         </div>
       )}
     </div>
