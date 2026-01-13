@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 /* ----------------- CONSTANTS ----------------- */
 
@@ -95,6 +96,12 @@ export default function PartNumbersQuantityPrediction() {
 
   return (
     <div className="w-full px-4 sm:px-6 pt-6 pb-10 font-mazda bg-[#ECEFF1] min-h-screen">
+
+       <Link to="/" className="font-bold text-sm p-3 underline">
+          RETURN TO DASHBOARD
+        </Link>
+        <br />
+        <br />
       {/* HEADER */}
       <h1 className="text-[18px] font-bold text-[#101010] mb-6 uppercase tracking-wider">
         Prediction Dashboard
