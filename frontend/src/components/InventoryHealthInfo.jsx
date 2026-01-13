@@ -199,7 +199,7 @@ export default function InventoryHealthInfo() {
                   {currentEntries.map((item, index) => (
                     <tr
                       key={index}
-                      className={`${index % 2 === 0 ? "bg-white" : "bg-[#F7F9FC]"
+                      className={`${index % 2 === 0 ? "bg-white" : "bg-[#ECEFF1]"
                         } hover:bg-blue-50 transition`}
                     >
                       <td className="px-4 py-2 border border-[#E5E7EB]">

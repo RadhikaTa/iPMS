@@ -59,7 +59,7 @@ const Header = () => {
 
         {/* Center / Left: App Title */}
         <div className="flex justify-center lg:justify-start ml-[20px] lg:ml-[30px]">
-          <h1 className="font-sans font-bold text-[20px] md:text-[24px] tracking-[1.5px] text-white">
+          <h1 className="font-sans font-bold text-[24px] tracking-[1.5px] text-white">
             iPMS
           </h1>
         </div>

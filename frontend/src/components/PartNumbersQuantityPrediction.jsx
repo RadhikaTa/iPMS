@@ -129,7 +129,7 @@ export default function PartNumbersQuantityPrediction() {
       <div className="mb-6 flex gap-4">
         <button
           onClick={() => setPredictionMode("single")}
-          className={`px-6 py-2.5 uppercase hover:bg-blue-900 rounded-[5px] text-[13px] ${predictionMode === "single" ? "bluebgColour rounded-[3px] text-white" : "border-black bg-white rounded-[3px] text-black"}`}
+          className={`px-6 py-2.5 uppercase hover:bg-blue-900 rounded-[5px] text-[13px] ${predictionMode === "single" ? "bluebgColour rounded-[3px] text-white" : "border border-black bg-white rounded-[3px] text-black"}`}
         >
           Single Part Prediction
         </button>
