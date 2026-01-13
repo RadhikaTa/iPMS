@@ -1,6 +1,5 @@
 import React, { useState, createContext, useContext } from "react";
 import Header from "./Header";
-import Sidebar from "./Sidebar";
 
 const SidebarContext = createContext();
 export const useSidebar = () => useContext(SidebarContext);

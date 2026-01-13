@@ -11,6 +11,7 @@ import Returnable from "../assets/Returnable.svg";
 import Collision from "../assets/Collision.svg";
 import Scrap1 from "../assets/Scrap1.svg";
 import { Link } from "react-router-dom";
+import TransferOrder from "./TransferOrder"
 
 // ===================== CHART.JS PLUGIN DEFINITION (TOTAL IN CENTER) =====================
 const doughnutLabelsPlugin = {
@@ -381,6 +382,11 @@ const Dashboard = () => {
                         <img src={Print} className="w-4 h-4" alt="Print" />
                         PRINT
                     </button>
+                    <Link to="part-numbers-quantity-prediction">
+                     <button className="bluebgColour text-white px-4 py-2.5 rounded-[5px] flex items-center gap-2 hover:bg-blue-900 text-[13px] sm:text-sm">
+                        HISTORICAL DATA
+                    </button>
+                    </Link>
                 </div>
 
                 {/* Legends: Ensure good spacing with flex-wrap */}
@@ -569,12 +575,14 @@ const Dashboard = () => {
                 <button className="bluebgColour text-white px-6 py-2.5 rounded-[3px] hover:bg-blue-900 text-[13px] sm:text-sm">
                     GENERATE DATA FILE
                 </button>
+                {/* <button className="bluebgColour text-white px-6 py-2.5 rounded-[3px] hover:bg-blue-900 text-[13px] sm:text-sm">
+                  <Link to='./VOROrder.jsx'>  TRANSFER TO VOR </Link>
+                </button> */}
+                <Link to="/transfer-order">
                 <button className="bluebgColour text-white px-6 py-2.5 rounded-[3px] hover:bg-blue-900 text-[13px] sm:text-sm">
-                    TRANSFER TO VOR
+                    TRANSFER ORDER
                 </button>
-                <button className="bluebgColour text-white px-6 py-2.5 rounded-[3px] hover:bg-blue-900 text-[13px] sm:text-sm">
-                    TRANSFER TO STOCK ORDER
-                </button>
+                </Link>
                 <button className="bluebgColour text-white px-6 py-2.5 rounded-[3px] hover:bg-blue-900 text-[13px] sm:text-sm">
                     RESET
                 </button>

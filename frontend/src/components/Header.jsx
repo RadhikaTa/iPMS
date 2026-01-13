@@ -8,32 +8,32 @@ import User2 from '../assets/User2.svg';
 import InterraIT_NEW from '../assets/InterraIT_NEW.png';
 
 // Sidebar sections
-const sections = [
-  {
-    title: 'PARTS ORDER',
-    items: [
-      { label: 'Suggested Stocks', path: '/' },
-      { label: 'iAI Prediction', path: '/part-numbers-quantity-prediction' },
-      { label: 'Inquire Availability', path: '/inquire-availability' },
-      { label: 'VOR Order', path: '/vor-order' },
-      { label: 'Order Inquiry', path: '/order-inquiry' },
-      { label: 'Stock Order', path: '/stock-order' },
-      { label: 'View Stock Order', path: '/view-stock-order' },
-      { label: 'Manage Backorders', path: '/manage-backorders' },
-      { label: 'Inquire Parts Orders', path: '/inquire-parts-orders' },
-    ],
-  },
-  { title: 'PARTS RETURN', items: [] },
-  { title: 'VEHICLE ORDER', items: [] },
-  { title: 'SALES', items: [] },
-  { title: 'INCENTIVES', items: [] },
-  { title: 'SERVICE', items: [] },
-  { title: 'CLAIM AUTHORIZATION', items: [] },
-  { title: 'MARKETING / CUSTOMER', items: [] },
-];
+// const sections = [
+//   {
+//     title: 'PARTS ORDER',
+//     items: [
+//       { label: 'Suggested Stocks', path: '/' },
+//       { label: 'iAI Prediction', path: '/part-numbers-quantity-prediction' },
+//       { label: 'Inquire Availability', path: '/inquire-availability' },
+//       { label: 'VOR Order', path: '/vor-order' },
+//       { label: 'Order Inquiry', path: '/order-inquiry' },
+//       { label: 'Stock Order', path: '/stock-order' },
+//       { label: 'View Stock Order', path: '/view-stock-order' },
+//       { label: 'Manage Backorders', path: '/manage-backorders' },
+//       { label: 'Inquire Parts Orders', path: '/inquire-parts-orders' },
+//     ],
+//   },
+//   { title: 'PARTS RETURN', items: [] },
+//   { title: 'VEHICLE ORDER', items: [] },
+//   { title: 'SALES', items: [] },
+//   { title: 'INCENTIVES', items: [] },
+//   { title: 'SERVICE', items: [] },
+//   { title: 'CLAIM AUTHORIZATION', items: [] },
+//   { title: 'MARKETING / CUSTOMER', items: [] },
+// ];
 
 const Header = () => {
-  const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
+  // const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -48,13 +48,13 @@ const Header = () => {
         {/* Left: Hamburger + Logo */}
         <div className="flex items-center gap-4 md:gap-6">
           
-          {/* Hamburger */}
+          {/* Hamburger
           <button
             className="text-white"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
             {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          </button> */}
 
           {/* Logo */}
           <img
@@ -101,7 +101,7 @@ const Header = () => {
       </header>
 
       {/* ===== Sidebar ===== */}
-      <aside
+      {/* <aside
         className={`fixed top-[70px] left-0 h-full bg-[#2D3C50] z-20 font-mazda overflow-y-auto shadow-lg transition-all duration-300 ease-in-out
         ${isSidebarOpen ? 'translate-x-0 w-[220px]' : '-translate-x-full md:translate-x-0 md:w-0'}`}
       >
@@ -110,12 +110,10 @@ const Header = () => {
             {sections.map((section, index) => (
               <div key={index}>
                 
-                {/* Section Title */}
                 <div className="h-[55px] flex items-center px-5 text-[13px] font-bold text-[#969EA8] border-b border-[#3A3A3A] tracking-widest">
                   {section.title}
                 </div>
 
-                {/* Section Items */}
                 <div className="flex flex-col">
                   {(section.items || []).map((item, idx) => {
                     const isActive =
@@ -145,7 +143,7 @@ const Header = () => {
             ))}
           </div>
         )}
-      </aside>
+      </aside> */}
     </>
   );
 };
