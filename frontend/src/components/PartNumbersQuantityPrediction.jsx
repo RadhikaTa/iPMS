@@ -95,9 +95,9 @@ export default function PartNumbersQuantityPrediction() {
   const headerStyle = "px-4 py-2 font-bold border border-[#E0E0E0] h-[66px] text-white bg-[#2B2B2B] text-left uppercase tracking-wider text-[13px]";
 
   return (
-    <div className="w-full px-4 sm:px-6 pt-6 pb-10 font-mazda bg-[#ECEFF1] min-h-screen">
+    <div className="w-full px-4 sm:px-6 pt-6 pb-10 bg-[#ECEFF1] min-h-screen">
 
-       <Link to="/" className="font-bold text-sm p-3 underline">
+       <Link to="/" className="font-semibold text-sm p-3 underline">
           RETURN TO DASHBOARD
         </Link>
         <br />
@@ -111,13 +111,13 @@ export default function PartNumbersQuantityPrediction() {
       <div className="mb-6 flex gap-4">
         <button
           onClick={() => setPredictionMode("single")}
-          className={`px-6 py-2.5 uppercase hover:bg-blue-900 text-[13px] ${predictionMode === "single" ? "bluebgColour rounded-[3px] text-white" : "border-black bg-white rounded-[3px] text-black"}`}
+          className={`px-6 py-2.5 uppercase hover:bg-blue-900 rounded-[5px] text-[13px] ${predictionMode === "single" ? "bluebgColour rounded-[3px] text-white" : "border-black bg-white rounded-[3px] text-black"}`}
         >
           Single Part Prediction
         </button>
         <button
           onClick={() => setPredictionMode("bulk")}
-          className={`px-6 py-2.5 uppercase text-[13px]  ${predictionMode === "bulk" ? "bluebgColour rounded-[3px] text-white hover:bg-blue-900" : "border border-black rounded-[3px] bg-white text-black"}`}
+          className={`px-6 py-2.5 uppercase text-[13px] rounded-[5px] ${predictionMode === "bulk" ? "bluebgColour rounded-[3px] text-white hover:bg-blue-900" : "border border-black rounded-[3px] bg-white text-black"}`}
         >
           Bulk Top 100 Prediction
         </button>
@@ -171,7 +171,7 @@ export default function PartNumbersQuantityPrediction() {
             <button
               onClick={handleSinglePredict}
               disabled={singleLoading}
-              className="bluebgColour rounded-[3px] text-white px-6 py-2 text-[13px] uppercase hover:bg-blue-900"
+              className="bluebgColour rounded-[5px] text-white px-6 py-2 text-[13px] uppercase hover:bg-blue-900"
             >
               {singleLoading ? "Predicting..." : "Predict"}
             </button>

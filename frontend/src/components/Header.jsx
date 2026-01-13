@@ -6,6 +6,8 @@ import { Menu, X } from 'lucide-react';
 import { useSidebar } from './MainLayout';
 import User2 from '../assets/User2.svg';
 import InterraIT_NEW from '../assets/InterraIT_NEW.png';
+import { ChevronDown } from 'lucide-react';
+import UserDropdown from './UserDropDown';
 
 // Sidebar sections
 // const sections = [
@@ -43,44 +45,40 @@ const Header = () => {
   return (
     <>
       {/* ===== Header Bar ===== */}
-      <header className="w-full h-[70px] bluebgColour flex items-center justify-between px-4 md:px-6 lg:px-8 shadow-sm z-30 fixed top-0 left-0 right-0">
-        
-        {/* Left: Hamburger + Logo */}
-        <div className="flex items-center gap-4 md:gap-6">
-          
-          {/* Hamburger
-          <button
-            className="text-white"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          >
-            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-          </button> */}
+      <header className="w-full h-[70px] bg-blue-600 flex items-center justify-between px-4 md:px-6 lg:px-8 shadow-sm fixed top-0 left-0 right-0 z-30">
 
-          {/* Logo */}
+        {/* Left: Logo */}
+        <div className="flex items-start h-full">
           <img
             src={InterraIT_NEW}
             alt="Interra Logo"
-            className="w-5 h-5 rounded-[3px] p-1.5 bg-white md:w-[100px] md:h-[36px] lg:w-[168px] lg:h-[36px] sm:w-[90px] sm:h-[36px]"
+            className="bg-white rounded-bl-[10px] rounded-br-[10px]  object-contain
+                 w-[130px] h-[50px] px-3 lg:w-[200px] lg:h-[56px] lg:px-4 lg:py-2 md:px-2 md:py-1"
           />
+        </div>
 
-          {/* Title */}
-          <h1 className="font-sans font-bold text-[24px] leading-[33px] tracking-[2.4px] text-white">
+        {/* Center / Left: App Title */}
+        <div className="flex justify-center lg:justify-start ml-[20px] lg:ml-[30px]">
+          <h1 className="font-sans font-bold text-[20px] md:text-[24px] tracking-[1.5px] text-white">
             iPMS
           </h1>
         </div>
 
         {/* Right: User Info */}
-        <div className="flex items-center gap-3 md:gap-4">
-          <div className="text-white font-mazda uppercase text-sm text-center leading-tight">
-            Radhika Tayal
-            <br />
-            <span className="text-black">
+        <div className="flex items-center gap-3 md:gap-4 ml-auto">
+          {/* Dealer Selector */}
+          <div className="relative inline-flex items-center text-white text-sm uppercase font-mazda cursor-pointer">
+            
+
+            <span className="relative inline-flex items-center ml-2">
+              {/* Invisible select */}
               <select
                 value={currentDealerCode}
                 onChange={(e) => {
                   localStorage.setItem("dealerCode", e.target.value);
                   window.location.reload();
                 }}
+                className="absolute inset-0 opacity-0 cursor-pointer text-black"
               >
                 <option value="10131">10131</option>
                 <option value="23454">23454</option>
@@ -89,15 +87,16 @@ const Header = () => {
                 <option value="51485">51485</option>
                 <option value="83314">83314</option>
               </select>
+
+              {/* Visible icon */}
+              <ChevronDown size={16} className="text-white" />
             </span>
           </div>
 
-          <img
-            src={User2}
-            alt="User Icon"
-            className="w-[30px] h-[30px] md:w-[24px] md:h-[24px] lg:w-[26px] lg:h-[26px]"
-          />
+          {/* User Icon */}
+          <UserDropdown />
         </div>
+
       </header>
 
       {/* ===== Sidebar ===== */}
