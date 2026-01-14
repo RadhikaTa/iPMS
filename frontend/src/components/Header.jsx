@@ -45,7 +45,7 @@ const Header = () => {
   return (
     <>
       {/* ===== Header Bar ===== */}
-      <header className="w-full h-[70px] bg-blue-600 flex items-center justify-between px-4 md:px-6 lg:px-8 shadow-sm fixed top-0 left-0 right-0 z-30">
+      <header className="w-full h-[70px] bluebgColour flex items-center justify-between px-4 md:px-6 lg:px-8 shadow-sm fixed top-0 left-0 right-0 z-30">
 
         {/* Left: Logo */}
         <div className="flex items-start h-full">
@@ -53,7 +53,7 @@ const Header = () => {
             src={InterraIT_NEW}
             alt="Interra Logo"
             className="bg-white rounded-bl-[10px] rounded-br-[10px]  object-contain
-                 w-[130px] h-[50px] px-3 lg:w-[200px] lg:h-[56px] lg:px-4 lg:py-2 md:px-2 md:py-1"
+                 w-[130px] h-[50px] lg:w-[200px] lg:h-[56px]  sm:px-1 sm:py-1 px-4 py-2"
           />
         </div>
 

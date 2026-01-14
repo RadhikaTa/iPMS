@@ -76,7 +76,7 @@ const StockOrder = () => {
       {/* ADD & DELETE BUTTONS */}
       <div className="mb-4 flex flex-wrap gap-4">
         <button className="rounded-[3px] text-[13px] px-4 py-2 bluebgColour text-white uppercase hover:bg-blue-900">Add</button>
-        <button className="border border-black rounded-[3px] text-[13px] px-4 py-2 uppercase">Delete</button>
+        <button className="rounded-[3px] text-[13px] px-4 py-2 bluebgColour text-white uppercase hover:bg-blue-900">Delete</button>
       </div>
 
       {/* LEGENDS */}
@@ -248,9 +248,9 @@ const StockOrder = () => {
       {/* BOTTOM ACTION BUTTONS */}
       <div className="mt-8 flex justify-center flex-wrap gap-4 sm:gap-6 text-[11px] font-semibold uppercase">
         <button className="bluebgColour rounded-[3px] text-[13px] text-white px-6 py-2 hover:bg-blue-900">Place Order</button>
-        <button className="border border-black rounded-[3px] text-[13px] px-6 py-2">Save</button>
-        <button className="border border-black rounded-[3px] text-[13px] px-6 py-2">Reset</button>
-        <button className="border border-black rounded-[3px] text-[13px] px-6 py-2">Print</button>
+        <button className="bluebgColour rounded-[3px] text-[13px] text-white px-6 py-2 hover:bg-blue-900">Save</button>
+        <button className="bluebgColour rounded-[3px] text-[13px] text-white px-6 py-2 hover:bg-blue-900">Reset</button>
+        <button className="bluebgColour rounded-[3px] text-[13px] text-white px-6 py-2 hover:bg-blue-900">Print</button>
       </div>
     </div>
   );
