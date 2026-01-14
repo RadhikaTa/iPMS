@@ -101,7 +101,7 @@ const StockOrder = () => {
         <table className="w-full min-w-[1000px] text-xs border-collapse font-sans">
  
           {/* HEADER */}
-          <thead>
+          <thead className="h-[66px">
             <tr className="sticky top-0 z-10 h-[66px] bg-[#2953CD] text-white">
               {[
                 "✔",

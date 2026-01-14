@@ -182,11 +182,12 @@ export default function InventoryHealthInfo() {
                   PRINT
                 </button>
               </div>
- 
+              <br />
+            
                 <table className="w-full border border-[#E5E7EB] border-collapse text-[12px]">
                 {/* HEADER */}
-                <thead className="bg-[#2953CD] text-white sticky top-0 z-10">
-                  <tr className="h-[44px]">
+                <thead className="bg-[#2953CD] text-white sticky top-0 z-10 h-[66px]">
+                  <tr className="h-[66px]">
                     <th className="px-4 font-semibold text-left">Dealer Code</th>
                     <th className="px-4 font-semibold text-left">Part Number</th>
                     <th className="px-4 font-semibold text-left">Part Name</th>
@@ -200,18 +201,18 @@ export default function InventoryHealthInfo() {
                     <tr
                       key={index}
                       className={`${index % 2 === 0 ? "bg-white" : "bg-[#ECEFF1]"
-                        } hover:bg-blue-50 transition`}
+                        } hover:bg-blue-50 transition h-[60px]`}
                     >
-                      <td className="px-4 py-2 border border-[#E5E7EB]">
+                      <td className="px-4 py-2  ">
                         {item.dealer_code}
                       </td>
-                      <td className="px-4 py-2 border border-[#E5E7EB]">
+                      <td className="px-4 py-2 ">
                         {item.part_no}
                       </td>
-                      <td className="px-4 py-2 border border-[#E5E7EB]">
+                      <td className="px-4 py-2 ">
                         {item.part_name}
                       </td>
-                      <td className="px-4 py-2 border border-[#E5E7EB] text-center">
+                      <td className="px-4 py-2 text-center">
                         <span
                           className={`px-3 py-1 rounded-full text-[11px] font-medium shadow-sm
               ${item.status === "Available"
