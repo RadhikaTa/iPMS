@@ -40,7 +40,7 @@ const Header = () => {
   const location = useLocation();
 
   // Current dealer code
-  const currentDealerCode = localStorage.getItem("dealerCode") || "10131";
+  const currentDealerCode = localStorage.getItem("dealer_code") || "10131";
 
   return (
     <>
@@ -65,9 +65,9 @@ const Header = () => {
         </div>
 
         {/* Right: User Info */}
-        <div className="flex items-center gap-3 md:gap-4 ml-auto">
+        <div className="flex items-center gap-3 ml-auto md:gap-4">
           {/* Dealer Selector */}
-          <div className="relative inline-flex items-center text-white text-sm uppercase font-mazda cursor-pointer">
+          <div className="relative inline-flex items-center text-sm text-white uppercase cursor-pointer font-mazda">
             
 
             <span className="relative inline-flex items-center ml-2">
@@ -75,10 +75,10 @@ const Header = () => {
               <select
                 value={currentDealerCode}
                 onChange={(e) => {
-                  localStorage.setItem("dealerCode", e.target.value);
+                  localStorage.setItem("dealer_code", e.target.value);
                   window.location.reload();
                 }}
-                className="absolute inset-0 opacity-0 cursor-pointer text-black"
+                className="absolute inset-0 text-black opacity-0 cursor-pointer"
               >
                 <option value="10131">10131</option>
                 <option value="23454">23454</option>

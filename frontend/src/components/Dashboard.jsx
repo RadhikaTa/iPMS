@@ -244,7 +244,7 @@ const Dashboard = () => {
         const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
 
         return (
-            <div className="text-xs space-y-2">
+            <div className="space-y-2 text-xs">
                 {data.labels.map((label, index) => {
                     const value = data.datasets[0].data[index];
                     const percentage = total === 0 ? 0 : ((value / total) * 100).toFixed(2);
@@ -266,14 +266,14 @@ const Dashboard = () => {
     // ... (LOADING / ERROR UI REMAINS THE SAME) ...
     if (isLoading)
         return (
-            <div className="p-6 min-h-screen flex justify-center items-center">
+            <div className="flex items-center justify-center min-h-screen p-6">
                 Loading dashboard data...
             </div>
         );
 
     if (error)
         return (
-            <div className="p-6 min-h-screen text-red-600 flex justify-center items-center">
+            <div className="flex items-center justify-center min-h-screen p-6 text-red-600">
                 Error loading data: {error}
             </div>
         );
@@ -283,12 +283,12 @@ const Dashboard = () => {
         <div className="p-4 md:p-6 bg-[#ECEFF1]  min-h-screen text-sm overflow-x-hidden">
 
             {/* 1. TOP CARDS: Responsive Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2 lg:grid-cols-4">
 
                 {/* Control Panel (No change needed) */}
-                <div className="border bg-white p-4 rounded shadow-sm">
+                <div className="p-4 bg-white border rounded shadow-sm">
                     <h2 className="font-semibold text-[#101010] text-[16px] mb-2 uppercase">Generate Graphs</h2>
-                    <p className="text-xs text-gray-500 mb-3">(At max 1 or 2)</p>
+                    <p className="mb-3 text-xs text-gray-500">(At max 1 or 2)</p>
 
                     <div className="space-y-2 text-sm">
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -311,15 +311,15 @@ const Dashboard = () => {
                 </div>
 
                 {/* 2. Inventory Health Chart: Changed flex to allow stacking on mobile (flex-col) */}
-                <div className="bg-white border p-4 rounded shadow-sm">
+                <div className="p-4 bg-white border rounded shadow-sm">
                     <Link to="/inventory-health-info">
                         <h2 className="font-semibold text-[16px] uppercase mb-2 text-center">Inventory Health</h2>
 
                         {/* 👇 CHANGE: Added flex-col for mobile, changed to flex-row on medium screens */}
-                        <div className="flex flex-col items-center md:flex-row md:items-start gap-4">
+                        <div className="flex flex-col items-center gap-4 md:flex-row md:items-start">
 
                             {/* Chart Container: Reduced base width for very small screens */}
-                            <div className="w-32 h-32 sm:w-40 sm:h-40 relative flex-shrink-0">
+                            <div className="relative flex-shrink-0 w-32 h-32 sm:w-40 sm:h-40">
                                 <Doughnut data={inventoryChartData} options={doughnutOptions} />
                             </div>
 
@@ -334,14 +334,14 @@ const Dashboard = () => {
                 </div>
 
                 {/* 3. Suggested Stocks Chart: Changed flex to allow stacking on mobile (flex-col) */}
-                <div className="bg-white border p-4 rounded shadow-sm">
+                <div className="p-4 bg-white border rounded shadow-sm">
                     <h2 className="font-semibold text-[16px] uppercase mb-2 text-center">Suggested Stocks</h2>
 
                     {/* 👇 CHANGE: Added flex-col for mobile, changed to flex-row on medium screens */}
-                    <div className="flex flex-col items-center md:flex-row md:items-start gap-4">
+                    <div className="flex flex-col items-center gap-4 md:flex-row md:items-start">
 
                         {/* Doughnut Chart: Reduced base width for very small screens */}
-                        <div className="w-32 h-32 sm:w-40 sm:h-40 relative flex-shrink-0">
+                        <div className="relative flex-shrink-0 w-32 h-32 sm:w-40 sm:h-40">
                             <Doughnut data={stockChartData} options={doughnutOptions} />
                         </div>
 
@@ -354,9 +354,9 @@ const Dashboard = () => {
                 </div>
 
                 {/* Tips (No change needed) */}
-                <div className="bg-white border p-4 rounded shadow-sm">
+                <div className="p-4 bg-white border rounded shadow-sm">
                     <div className="flex items-center justify-center gap-2 mb-3">
-                        <img src={AiLogo} className="w-9 h-5" alt="AI" />
+                        <img src={AiLogo} className="h-5 w-9" alt="AI" />
                         <h2 className="font-bold text-[16px] uppercase">Tips</h2>
                     </div>
 
@@ -369,7 +369,7 @@ const Dashboard = () => {
             </div>
 
             {/* 4. ACTION BAR: Use flex-wrap on mobile */}
-            <div className="flex flex-col lg:flex-row justify-between gap-4 mb-4">
+            <div className="flex flex-col justify-between gap-4 mb-4 lg:flex-row">
 
                 {/* Buttons: Use flex-wrap on small screens */}
                 <div className="flex flex-wrap gap-4">
@@ -411,10 +411,8 @@ const Dashboard = () => {
 
             </div>
 
-            {/* 5. DATA TABLE: Scrollable Wrapper */}
-            {/* The overflow-x-auto on the wrapper is crucial to handle the min-w-[1200px] table */}
-            {/* The overflow-x-auto on the wrapper is crucial to handle the min-w-[1200px] table */}
-            <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+ 
+            <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                 <table className="w-full min-w-[1200px] text-xs border-collapse font-sans">
                     <thead>
                         <tr className="sticky top-0 z-10 h-[66px] bg-[#2953CD] text-white">
@@ -423,13 +421,13 @@ const Dashboard = () => {
                                 <div className="flex items-center justify-center">
                                     <input
                                         type="checkbox"
-                                        className="w-4 h-4 accent-white cursor-pointer"
+                                        className="w-4 h-4 cursor-pointer accent-white"
                                     />
                                 </div>
                             </th>
-
+                               
                             {/* Header Columns */}
-                            {["Part No", "Part Name", "Status"].map((heading, index) => (
+                            {["Part No", "Part Name","Available Qty","Monthly Suggested Qty","DNP","Last Sale Date","Last Purchase Date","Age(Month)","12 Month Sale Qty","Product Heirarchy","Item Info"].map((heading, index) => (
                                 <th
                                     key={index}
                                     className={`px-4 py-3 text-[13px] font-semibold text-white whitespace-nowrap bg-[#2953CD] ${heading === "Status" ? "text-center" : "text-left"
@@ -480,7 +478,19 @@ const Dashboard = () => {
                                             />
                                         </div>
                                     </td>
-
+                                                 {/*
+                                    part_no: str
+                                    part_name: str
+                                    available_qty:int
+            
+                                    monthly_suggested:Optional[int] = None 
+                                    dnp:int
+                                    last_sales_date:Optional[date] = None 
+                                    last_purchase_date:Optional[date] = None 
+                                    age:Optional[int] = None 
+                                    sale_in_12_months:Optional[int] = None 
+                                    heirarchy:str
+                                    status: str */}
                                     {/* Part No */}
                                     <td className="px-4 py-3 text-[#101010] font-medium text-left">
                                         {item.part_no}
@@ -489,6 +499,30 @@ const Dashboard = () => {
                                     {/* Part Name */}
                                     <td className="px-4 py-3 text-[#101010] text-left">
                                         {item.part_name}
+                                    </td>
+                                      <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.available_qty}
+                                    </td>
+                                      <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.monthly_suggested}
+                                    </td>
+                                      <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.dnp}
+                                    </td>
+                                      <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.last_sales_date}
+                                    </td>
+                                      <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.last_purchase_date}
+                                    </td>
+                                     <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.age}
+                                    </td>
+                                     <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.sale_in_12_months}
+                                    </td>
+                                     <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.heirarchy}
                                     </td>
 
                                     {/* Status Badge - Kept Center to match the now Centered Header */}
@@ -507,7 +541,7 @@ const Dashboard = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="4" className="text-center py-8 text-gray-500 text-sm">
+                                <td colSpan="14" className="py-8 text-sm text-center text-gray-500">
                                     No parts data available.
                                 </td>
                             </tr>
@@ -519,7 +553,7 @@ const Dashboard = () => {
             {/* 6. PAGINATION (No change needed) */}
             {totalPages > 1 && (
                 <div className="flex justify-center mt-4">
-                    <ul className="flex gap-2 text-bold items-center">
+                    <ul className="flex items-center gap-2 text-bold">
                         <li>
                             <button
                                 onClick={goToPrevPage}
@@ -571,7 +605,7 @@ const Dashboard = () => {
             )}
 
             {/* 7. BOTTOM BUTTONS: Use flex-wrap to prevent overflow */}
-            <div className="flex flex-wrap justify-center gap-4 mt-6 pb-6">
+            <div className="flex flex-wrap justify-center gap-4 pb-6 mt-6">
                 <button className="bluebgColour text-white px-6 py-2.5 rounded-[3px] hover:bg-blue-900 text-[13px] sm:text-sm">
                     GENERATE DATA FILE
                 </button>
