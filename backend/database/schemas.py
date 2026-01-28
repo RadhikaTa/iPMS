@@ -9,7 +9,7 @@ class Part(BaseModel):
     part_no: str
     part_name: str
     available_qty:int
-    part_returnable_fl:str
+    part_returnable_fl:Optional[str] = None
     monthly_suggested:Optional[int] = None 
     dnp:int
     last_sales_date:Optional[date] = None 
@@ -17,7 +17,7 @@ class Part(BaseModel):
     age:Optional[int] = None 
     sale_in_12_months:Optional[int] = None 
     heirarchy:str 
-    status: str
+    status: Optional[str] = None 
     last_updt_tm: Optional[datetime] = None 
 
     class Config:

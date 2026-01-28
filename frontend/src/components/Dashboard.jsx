@@ -383,9 +383,9 @@ const Dashboard = () => {
                         PRINT
                     </button>
                     <Link to="part-numbers-quantity-prediction">
-                     <button className="bluebgColour text-white px-4 py-2.5 rounded-[5px] flex items-center gap-2 hover:bg-blue-900 text-[13px] sm:text-sm">
-                        HISTORICAL DATA
-                    </button>
+                        <button className="bluebgColour text-white px-4 py-2.5 rounded-[5px] flex items-center gap-2 hover:bg-blue-900 text-[13px] sm:text-sm">
+                            HISTORICAL DATA
+                        </button>
                     </Link>
                 </div>
 
@@ -411,7 +411,9 @@ const Dashboard = () => {
 
             </div>
 
- 
+            {/* 5. DATA TABLE: Scrollable Wrapper */}
+            {/* The overflow-x-auto on the wrapper is crucial to handle the min-w-[1200px] table */}
+            {/* The overflow-x-auto on the wrapper is crucial to handle the min-w-[1200px] table */}
             <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                 <table className="w-full min-w-[1200px] text-xs border-collapse font-sans">
                     <thead>
@@ -425,9 +427,9 @@ const Dashboard = () => {
                                     />
                                 </div>
                             </th>
-                               
+
                             {/* Header Columns */}
-                            {["Part No", "Part Name","Available Qty","Monthly Suggested Qty","DNP","Last Sale Date","Last Purchase Date","Age(Month)","12 Month Sale Qty","Product Heirarchy","Item Info"].map((heading, index) => (
+                            {["Part No", "Part Name", "Available Qty", "Monthly Suggested Qty", "DNP", "Last Sale Date", "Last Purchase Date", "Age(Month)", "12 Month Sale Qty", "Product Heirarchy", "Item Info"].map((heading, index) => (
                                 <th
                                     key={index}
                                     className={`px-4 py-3 text-[13px] font-semibold text-white whitespace-nowrap bg-[#2953CD] ${heading === "Status" ? "text-center" : "text-left"
@@ -478,19 +480,7 @@ const Dashboard = () => {
                                             />
                                         </div>
                                     </td>
-                                                 {/*
-                                    part_no: str
-                                    part_name: str
-                                    available_qty:int
-            
-                                    monthly_suggested:Optional[int] = None 
-                                    dnp:int
-                                    last_sales_date:Optional[date] = None 
-                                    last_purchase_date:Optional[date] = None 
-                                    age:Optional[int] = None 
-                                    sale_in_12_months:Optional[int] = None 
-                                    heirarchy:str
-                                    status: str */}
+
                                     {/* Part No */}
                                     <td className="px-4 py-3 text-[#101010] font-medium text-left">
                                         {item.part_no}
@@ -500,31 +490,30 @@ const Dashboard = () => {
                                     <td className="px-4 py-3 text-[#101010] text-left">
                                         {item.part_name}
                                     </td>
-                                      <td className="px-4 py-3 text-[#101010] text-left">
+                                    <td className="px-4 py-3 text-[#101010] text-left">
                                         {item.available_qty}
                                     </td>
-                                      <td className="px-4 py-3 text-[#101010] text-left">
+                                    <td className="px-4 py-3 text-[#101010] text-left">
                                         {item.monthly_suggested}
                                     </td>
-                                      <td className="px-4 py-3 text-[#101010] text-left">
+                                    <td className="px-4 py-3 text-[#101010] text-left">
                                         {item.dnp}
                                     </td>
-                                      <td className="px-4 py-3 text-[#101010] text-left">
+                                    <td className="px-4 py-3 text-[#101010] text-left">
                                         {item.last_sales_date}
                                     </td>
-                                      <td className="px-4 py-3 text-[#101010] text-left">
+                                    <td className="px-4 py-3 text-[#101010] text-left">
                                         {item.last_purchase_date}
                                     </td>
-                                     <td className="px-4 py-3 text-[#101010] text-left">
+                                    <td className="px-4 py-3 text-[#101010] text-left">
                                         {item.age}
                                     </td>
-                                     <td className="px-4 py-3 text-[#101010] text-left">
+                                    <td className="px-4 py-3 text-[#101010] text-left">
                                         {item.sale_in_12_months}
                                     </td>
-                                     <td className="px-4 py-3 text-[#101010] text-left">
+                                    <td className="px-4 py-3 text-[#101010] text-left">
                                         {item.heirarchy}
                                     </td>
-
                                     {/* Status Badge - Kept Center to match the now Centered Header */}
                                     <td className="px-4 py-3 text-center">
                                         <span
@@ -581,8 +570,8 @@ const Dashboard = () => {
                                 <li
                                     key={page}
                                     className={`px-3 py-1 cursor-pointer font-bold ${page === currentPage
-                                            ? "border-b-2 border-[#2953CD] text-[#2953CD]"
-                                            : "hover:text-[#2953CD]"
+                                        ? "border-b-2 border-[#2953CD] text-[#2953CD]"
+                                        : "hover:text-[#2953CD]"
                                         }`}
                                     onClick={() => setCurrentPage(page)}
                                 >
@@ -613,9 +602,9 @@ const Dashboard = () => {
                   <Link to='./VOROrder.jsx'>  TRANSFER TO VOR </Link>
                 </button> */}
                 <Link to="/transfer-order">
-                <button className="bluebgColour text-white px-6 py-2.5 rounded-[3px] hover:bg-blue-900 text-[13px] sm:text-sm">
-                    TRANSFER ORDER
-                </button>
+                    <button className="bluebgColour text-white px-6 py-2.5 rounded-[3px] hover:bg-blue-900 text-[13px] sm:text-sm">
+                        TRANSFER ORDER
+                    </button>
                 </Link>
                 <button className="bluebgColour text-white px-6 py-2.5 rounded-[3px] hover:bg-blue-900 text-[13px] sm:text-sm">
                     RESET
