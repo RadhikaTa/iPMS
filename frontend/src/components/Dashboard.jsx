@@ -13,6 +13,8 @@ import Scrap1 from "../assets/Scrap1.svg";
 import { Link } from "react-router-dom";
 import TransferOrder from "./TransferOrder"
 
+
+const API_URL = import.meta.env.VITE_API_URL;
 // ===================== CHART.JS PLUGIN DEFINITION (TOTAL IN CENTER) =====================
 const doughnutLabelsPlugin = {
     id: "doughnutLabels",
@@ -102,12 +104,13 @@ const Dashboard = () => {
     // };
 
     const DEALER_CODE = typeof window !== 'undefined' ? localStorage.getItem("dealer_code") || "10131" : "10131";
+    
 
     // ===================== FETCH EFFECTS (UNCHANGED) =====================
     useEffect(() => {
         const fetchParts = async () => {
             try {
-                const url = `http://127.0.0.1:8000/api/parts?dealer_code=${DEALER_CODE}`;
+                const url = `${API_URL}/parts?dealer_code=${DEALER_CODE}`;
                 const response = await fetch(url);
 
                 if (!response.ok)
@@ -127,7 +130,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchInventoryHealth = async () => {
             try {
-                const url = `http://127.0.0.1:8000/api/inv-health?dealer_code=${DEALER_CODE}`;
+                const url = `${API_URL}/inv-health?dealer_code=${DEALER_CODE}`;
                 const response = await fetch(url);
                 if (!response.ok)
                     throw new Error(
@@ -164,7 +167,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchSuggestedStocks = async () => {
             try {
-                const url = `http://127.0.0.1:8000/api/suggested-stocks?dealer_code=${DEALER_CODE}`;
+                const url = `${API_URL}/suggested-stocks?dealer_code=${DEALER_CODE}`;
 
                 const response = await fetch(url);
                 if (!response.ok) {

@@ -106,95 +106,80 @@ def get_parts_list(
 ):
 
     query = """
-                    WITH CTE AS ( 
-            SELECT t1.dealer_code, t1.part_no, 
-            COALESCE(t2.part_name,'') AS part_name,
-            t1.available_qty,
-            t2.dnp,
-            t2.heirarchy,
-            CASE
-            WHEN t1.status = 'I' THEN 'IDLE'
-            WHEN t1.status = 'P' THEN 'PREIDLE'
-            ELSE 'NORMAL'
-            END AS status,
-            t2.part_state
-            FROM public.dealer_daily_stock t1 
-            LEFT JOIN public.parts_master t2 ON t1.part_no = t2.part_no
-            WHERE t1.dealer_code=%s 
-            ),AGG_CTE AS (
-            SELECT 
-            dealer_code,
-            TRIM(part_no) AS part_no,
-            TRIM(part_name) AS part_name,
-            available_qty,
-            dnp,
-            heirarchy,
-            CASE 
-            WHEN (status IS NOT NULL AND TRIM(status)<>'') AND (part_state IS NOT NULL AND TRIM(part_state)<>'') THEN status || '-' || part_state
-            ELSE status || part_state
-            END AS status
-            FROM CTE 
-            ),PURCHASE_DATA AS(
-            SELECT dealer_code, part_no, MAX(ordr_entry_date) AS last_purchase_date
-            FROM PARTS_PURCHASE_DATA WHERE dealer_code=%s
-            GROUP BY dealer_code, part_no
-            ),SALES_DATA AS(
-            SELECT dealer_code, part_no, MAX(invoice_date) AS last_sales_date
-            FROM PARTS_SALES_DATA WHERE dealer_code=%s
-            GROUP BY dealer_code, part_no
-            ),SALES_IN_12MONTHS AS(
-            SELECT dealer_code, part_no, SUM(part_quantity) AS sale_in_12_months
-            FROM PARTS_SALES_DATA WHERE dealer_code=%s AND invoice_date >= CURRENT_DATE - INTERVAL '12 MONTHS' 
-            AND invoice_date < CURRENT_DATE - INTERVAL '1 DAY'
-            GROUP BY dealer_code, part_no
-            ),FCST_CTE AS(
-            SELECT 
-            dlr_cd AS dealer_code,
-            TRIM(part_no) AS part_no,
-            predicted_today as monthly_suggested
-            FROM PART_PURCHASE_FORECAST2 WHERE dlr_cd=%s 
-            )
-            SELECT 
-            ag.dealer_code,
-            ag.part_no,
-            ag.part_name,
-            ag.available_qty,
-            pm.part_returnable_fl,
-            COALESCE(ROUND(pf.monthly_suggested),0) AS monthly_suggested,
-            COALESCE(ag.dnp,0) AS dnp,
-            sd.last_sales_date,
-            pd.last_purchase_date,
-            EXTRACT(YEAR FROM AGE(
-                CURRENT_DATE,
-                GREATEST(
-                    COALESCE(sd.last_sales_date, DATE '1900-01-01'),
-                    COALESCE(pd.last_purchase_date, DATE '1900-01-01')
-                )
-            )) * 12
-            +
-            EXTRACT(MONTH FROM AGE(
-                CURRENT_DATE,
-                GREATEST(
-                    COALESCE(sd.last_sales_date, DATE '1900-01-01'),
-                    COALESCE(pd.last_purchase_date, DATE '1900-01-01')
-                )
-            )) AS age,
-            COALESCE(sin12months.sale_in_12_months,0) AS sale_in_12_months,
-            COALESCE(ag.heirarchy,'') AS heirarchy,
-            ag.status
-            FROM AGG_CTE ag LEFT JOIN public.parts_master pm ON ag.part_no = pm.part_no
-            LEFT JOIN FCST_CTE pf ON ag.dealer_code = pf.dealer_code AND ag.part_no = pf.part_no
-            LEFT JOIN PURCHASE_DATA pd ON ag.dealer_code = pd.dealer_code AND ag.part_no = pd.part_no
-            LEFT JOIN SALES_DATA sd ON ag.dealer_code = sd.dealer_code AND ag.part_no = sd.part_no
-            LEFT JOIN SALES_IN_12MONTHS sin12months ON ag.dealer_code = sin12months.dealer_code AND ag.part_no = sin12months.part_no
-            OFFSET %s
-            LIMIT %s
+                 SELECT 
+    t1.dealer_code,
+    TRIM(t1.part_no) AS part_no,
+    TRIM(COALESCE(pm.part_name,'')) AS part_name,
+    t1.available_qty,
+    pm.part_returnable_fl,
+    COALESCE(ROUND(pf.predicted_today),0) AS monthly_suggested,
+    COALESCE(pm.dnp,0) AS dnp,
+
+    sd.last_sales_date,
+    pd.last_purchase_date,
+
+    (EXTRACT(YEAR FROM AGE(CURRENT_DATE, GREATEST(
+        COALESCE(sd.last_sales_date, DATE '1900-01-01'),
+        COALESCE(pd.last_purchase_date, DATE '1900-01-01')
+    ))) * 12)
+    +
+    EXTRACT(MONTH FROM AGE(CURRENT_DATE, GREATEST(
+        COALESCE(sd.last_sales_date, DATE '1900-01-01'),
+        COALESCE(pd.last_purchase_date, DATE '1900-01-01')
+    ))) AS age,
+
+    COALESCE(sd.sale_in_12_months,0) AS sale_in_12_months,
+    COALESCE(pm.heirarchy,'') AS heirarchy,
+
+    CASE
+        WHEN t1.status='I' THEN 'IDLE'
+        WHEN t1.status='P' THEN 'PREIDLE'
+        ELSE 'NORMAL'
+    END
+    ||
+    COALESCE('-' || pm.part_state,'') AS status
+
+FROM dealer_daily_stock t1
+
+LEFT JOIN parts_master pm
+       ON pm.part_no = t1.part_no
+
+LEFT JOIN part_purchase_forecast2 pf
+       ON pf.dlr_cd = t1.dealer_code
+      AND pf.part_no = t1.part_no
+
+LEFT JOIN (
+    SELECT dealer_code, part_no,
+           MAX(ordr_entry_date) AS last_purchase_date
+    FROM parts_purchase_data
+    WHERE dealer_code = %s
+    GROUP BY dealer_code, part_no
+) pd ON pd.dealer_code = t1.dealer_code
+    AND pd.part_no = t1.part_no
+
+LEFT JOIN (
+    SELECT dealer_code, part_no,
+           MAX(invoice_date) AS last_sales_date,
+           SUM(part_quantity) FILTER (
+               WHERE invoice_date >= CURRENT_DATE - INTERVAL '12 MONTHS'
+                 AND invoice_date < CURRENT_DATE
+           ) AS sale_in_12_months
+    FROM parts_sales_data
+    WHERE dealer_code = %s
+    GROUP BY dealer_code, part_no
+) sd ON sd.dealer_code = t1.dealer_code
+    AND sd.part_no = t1.part_no
+
+WHERE t1.dealer_code = %s
+OFFSET %s
+LIMIT %s;
+
     """
 
     try:
         cursor.execute(
             query,
-            (dealer_code, dealer_code, dealer_code, dealer_code, dealer_code, skip, limit)
+            (dealer_code, dealer_code, dealer_code, skip, limit)
         )
         return cursor.fetchall()
 

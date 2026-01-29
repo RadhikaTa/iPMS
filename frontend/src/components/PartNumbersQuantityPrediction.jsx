@@ -50,7 +50,8 @@ export default function PartNumbersQuantityPrediction() {
   };
 
   /* ----------------- SINGLE ----------------- */
-
+  const API_URL = import.meta.env.VITE_API_URL;
+  const HTTP_URL = import.meta.env.VITE_HTTP_URL;
   const handleSinglePredict = async (e) => {
     e.preventDefault();
     setSingleLoading(true);
@@ -60,10 +61,10 @@ export default function PartNumbersQuantityPrediction() {
     setOrderData((p) => [...p, { key, dealer_code: dealerCode, partNumber: singlePartNumber, piPrediction: "-", iaiPrediction: "-", isLoading: true }]);
 
     try {
-      const dbRes = await axios.get(`http://127.0.0.1:8000/api/stock-details?cust_number=${dealerCode}&item_no=${singlePartNumber}`);
+      const dbRes = await axios.get(`${API_URL}/stock-details?cust_number=${dealerCode}&item_no=${singlePartNumber}`);
       const piQty = dbRes.data?.[0]?.pe_suggested_stock_qty ?? "-";
 
-      const mlQty = await fetchWithBackoff("http://127.0.0.1:8000/predict", {
+      const mlQty = await fetchWithBackoff(`${HTTP_URL}/predict`, {
         dealer_code: dealerCode,
         part_number: singlePartNumber,
         month: selectedMonth,
@@ -87,7 +88,7 @@ export default function PartNumbersQuantityPrediction() {
     setCurrentPage(1); // Reset to first page on new search
 
     try {
-      const res = await axios.get(`http://127.0.0.1:8000/api/top100-parts?dealer_code=${dealerCode}&month=${selectedMonth}`);
+      const res = await axios.get(`${API_URL}/top100-parts?dealer_code=${dealerCode}&month=${selectedMonth}`);
       setTop100Data(res.data);
       if (!res.data.length) setBulkError("No prediction data available for selection.");
     } catch (e) {
@@ -115,7 +116,7 @@ export default function PartNumbersQuantityPrediction() {
   return (
     <div className="w-full px-4 sm:px-6 pt-6 pb-10 bg-[#ECEFF1] min-h-screen">
 
-      <Link to="/" className="font-bold text-sm p-3 underline">
+      <Link to="/" className="p-3 text-sm font-bold underline">
         RETURN TO DASHBOARD
       </Link>
       <br />
@@ -126,7 +127,7 @@ export default function PartNumbersQuantityPrediction() {
       </h1>
 
       {/* MODE TOGGLE */}
-      <div className="mb-6 flex gap-4">
+      <div className="flex gap-4 mb-6">
         <button
           onClick={() => setPredictionMode("single")}
           className={`px-6 py-2.5 uppercase hover:bg-blue-900 rounded-[5px] text-[13px] ${predictionMode === "single" ? "bluebgColour rounded-[3px] text-white" : "border border-black bg-white rounded-[3px] text-black"}`}
@@ -143,7 +144,7 @@ export default function PartNumbersQuantityPrediction() {
 
       {/* FILTER CARD */}
       <div className="bg-white border border-[#D9D9D9] p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div>
             <label className="block text-[#101010] font-bold text-[13px] tracking-[1.95px] mb-2 uppercase">
               Dealer / Cust Code
@@ -204,13 +205,13 @@ export default function PartNumbersQuantityPrediction() {
           )}
         </div>
 
-        {singleError && <p className="text-sm text-red-600 mt-3">{singleError}</p>}
-        {bulkError && <p className="text-sm text-yellow-600 mt-3">{bulkError}</p>}
+        {singleError && <p className="mt-3 text-sm text-red-600">{singleError}</p>}
+        {bulkError && <p className="mt-3 text-sm text-yellow-600">{bulkError}</p>}
       </div>
 
       {/* SINGLE TABLE */}
       {predictionMode === "single" && orderData.length > 0 && (
-        <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200 mb-6">
+        <div className="mb-6 overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
           <table className="w-full min-w-[900px] text-xs border-collapse font-sans">
             <thead>
               <tr className="sticky top-0 z-10 h-[66px] bg-[#2953CD] text-white">
@@ -240,7 +241,7 @@ export default function PartNumbersQuantityPrediction() {
                   <td className="px-4 py-3 text-center text-[#101010] font-medium">{i.dealer_code}</td>
                   <td className="px-4 py-3 text-center text-[#101010] font-medium">{i.partNumber}</td>
                   <td className="px-4 py-3 text-center text-[#101010]">{i.piPrediction}</td>
-                  <td className="px-4 py-3 text-center font-semibold text-red-600">{i.iaiPrediction}</td>
+                  <td className="px-4 py-3 font-semibold text-center text-red-600">{i.iaiPrediction}</td>
                 </tr>
               ))}
             </tbody>
@@ -250,7 +251,7 @@ export default function PartNumbersQuantityPrediction() {
 
       {/* BULK TABLE */}
       {predictionMode === "bulk" && top100Data.length > 0 && (
-        <div className="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+        <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
           <table className="w-full min-w-[900px] text-xs border-collapse font-sans">
             <thead>
               <tr className="sticky top-0 z-10 h-[66px] bg-[#2953CD] text-white">
@@ -281,7 +282,7 @@ export default function PartNumbersQuantityPrediction() {
                     {indexOfFirstRow + idx + 1}
                   </td>
                   <td className="px-4 py-3 text-center text-[#101010] font-medium">{i.item_no}</td>
-                  <td className="px-4 py-3 text-center font-semibold text-red-600">
+                  <td className="px-4 py-3 font-semibold text-center text-red-600">
                     {Math.round(i.predicted_monthly)}
                   </td>
                   <td className="px-4 py-3 text-center text-[#101010]">{i.pe_suggested_stock_qty}</td>
@@ -295,7 +296,7 @@ export default function PartNumbersQuantityPrediction() {
       {/* PAGINATION SECTION */}
       {predictionMode === "bulk" && totalPages > 1 && (
         <div className="flex justify-center mt-4">
-          <ul className="flex gap-2 text-bold items-center">
+          <ul className="flex items-center gap-2 text-bold">
             <li>
               <button
                 onClick={goToPrevPage}

@@ -13,7 +13,7 @@ export default function InventoryHealthInfo() {
     DROP_SHIP: [],
     NORMAL: [],
   });
- 
+  const API_URL = import.meta.env.VITE_API_URL;
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const entriesPerPage = 5;
@@ -38,7 +38,7 @@ export default function InventoryHealthInfo() {
  
         const requests = Object.keys(endpoints).map((key) =>
           fetch(
-            `http://127.0.0.1:8000/api/${endpoints[key]}?dealer_code=${DEALER_CODE}` //FETCHING DATA FROM BACKEND
+            `${API_URL}/${endpoints[key]}?dealer_code=${DEALER_CODE}` //FETCHING DATA FROM BACKEND
           ).then((res) => res.json())
         );
  
@@ -130,7 +130,7 @@ export default function InventoryHealthInfo() {
  return (
     <div className="w-full min-h-screen overflow-x-auto overflow-y-auto bg-[#ECEFF1]">
       <div className="min-h-screen flex flex-col bg-[#ECEFF1]">
-        <Link to="/" className="font-bold text-sm p-3 underline">
+        <Link to="/" className="p-3 text-sm font-bold underline">
           RETURN TO DASHBOARD
         </Link>
  
@@ -159,9 +159,9 @@ export default function InventoryHealthInfo() {
           </h2>
  
           {loading ? (
-            <p className="text-center py-10 text-gray-500 font-medium">Loading tables...</p>
+            <p className="py-10 font-medium text-center text-gray-500">Loading tables...</p>
           ) : data.length === 0? (
-            <p className="text-center py-10 text-gray-500 font-medium">NO DATA FOUND FOR {activeTab.replace("_", " ")}</p>
+            <p className="py-10 font-medium text-center text-gray-500">NO DATA FOUND FOR {activeTab.replace("_", " ")}</p>
           ) : (
             <>
               <div className="flex pt-2 pb-2">
@@ -203,7 +203,7 @@ export default function InventoryHealthInfo() {
                       className={`${index % 2 === 0 ? "bg-white" : "bg-[#ECEFF1]"
                         } hover:bg-blue-50 transition h-[60px]`}
                     >
-                      <td className="px-4 py-2  ">
+                      <td className="px-4 py-2 ">
                         {item.dealer_code}
                       </td>
                       <td className="px-4 py-2 ">
@@ -233,7 +233,7 @@ export default function InventoryHealthInfo() {
  
  
               {/* PAGINATION */}
-              <div className="pt-3 pb-8 mb-20 flex justify-center items-center gap-2 select-none">
+              <div className="flex items-center justify-center gap-2 pt-3 pb-8 mb-20 select-none">
                 <button
                   onClick={() => goToPage(currentPage - 1)}
                   disabled={currentPage === 1}
