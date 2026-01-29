@@ -160,7 +160,7 @@ def get_parts_list(
             ag.part_name,
             ag.available_qty,
             pm.part_returnable_fl,
-            ROUND(pf.monthly_suggested) AS monthly_suggested,
+            COALESCE(ROUND(pf.monthly_suggested),0) AS monthly_suggested,
             COALESCE(ag.dnp,0) AS dnp,
             sd.last_sales_date,
             pd.last_purchase_date,
