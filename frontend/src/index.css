@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 /* MazdaType Font Variants */
 @font-face {
   font-family: 'MazdaType';

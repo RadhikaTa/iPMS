@@ -274,19 +274,43 @@ async def predict_quantity(request: PredictionRequest, cursor=Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
 
 @router.get("/api/top100-parts")
-async def get_top100_parts_comparison(dealer_code: str, month: str, cursor=Depends(get_db)) -> List[Dict[str, Any]]:
+def get_top100_parts_comparison(
+    dealer_code: str,
+    month: str,
+    cursor=Depends(get_db)
+) -> List[Dict[str, Any]]:
+
     dealer = dealer_code.strip()
     prediction_month_num = month_to_number(month)
+
+    if not prediction_month_num:
+        return []
+
     query = """
-        SELECT t1.part_no AS item_no, t1.predicted_today AS predicted_monthly,
-               COALESCE(t2.pe_suggested_stock_qty, 0) as pe_suggested_stock_qty
+        SELECT
+            t1.part_no AS item_no,
+            t1.predicted_today AS predicted_monthly,
+            COALESCE(t2.pe_suggested_stock_qty, 0) AS pe_suggested_stock_qty
         FROM public.part_purchase_forecast2 t1
         LEFT JOIN public.dealer_stocking_details t2
-            ON t1.dlr_cd::text = t2.cust_number AND t1.part_no = t2.item_no AND t2.month::int = %s
-        WHERE t1.dlr_cd = %s AND EXTRACT(MONTH FROM t1.prediction_date) = %s
-          AND ABS(t1.predicted_today - COALESCE(t2.pe_suggested_stock_qty, 0)) <= 3
-        ORDER BY t1.predicted_today DESC LIMIT 100;
+            ON TRIM(t1.dlr_cd::text) = TRIM(t2.cust_number)
+           AND t1.part_no = t2.item_no
+           AND t2.month::int = %s
+        WHERE TRIM(t1.dlr_cd) = %s
+          AND EXTRACT(MONTH FROM t1.prediction_date) = %s
+        ORDER BY t1.predicted_today DESC
+        LIMIT 100;
     """
+
     cursor.execute(query, (prediction_month_num, dealer, prediction_month_num))
     rows = cursor.fetchall()
-    return [{"item_no": r["item_no"], "dealer_code": dealer, "predicted_monthly": r["predicted_monthly"] or 0, "pe_suggested_stock_qty": r["pe_suggested_stock_qty"]} for r in rows]
+
+    return [
+        {
+            "item_no": r["item_no"],
+            "dealer_code": dealer,
+            "predicted_monthly": r.get("predicted_monthly") or 0,
+            "pe_suggested_stock_qty": r.get("pe_suggested_stock_qty") or 0,
+        }
+        for r in rows
+    ]
