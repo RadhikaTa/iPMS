@@ -9,13 +9,27 @@ const allMonths = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-const spinnerPathD = "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z";
+// const spinnerPathD = "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z";
+const CellLoader = () => (
+  <div className="flex items-center justify-center">
+    <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#2953CD]" />
+  </div>
+);
+
+// const renderValueOrLoader = (value) => {
+//   if (value === null || value === undefined) {
+//     return <CellLoader />;
+//   }
+
+//   const num = Number(value);
+//   return Number.isFinite(num) ? num : 0;
+// };
 
 /* ----------------- COMPONENT ----------------- */
 
 export default function PartNumbersQuantityPrediction() {
   const [dealerCode, setDealerCode] = useState(localStorage.getItem("dealerCode") || "10131");
-  const [selectedMonth, setSelectedMonth] = useState("October");
+  const [selectedMonth, setSelectedMonth] = useState("April");
   const [predictionMode, setPredictionMode] = useState("single");
 
   const [orderData, setOrderData] = useState([]);
@@ -238,113 +252,143 @@ export default function PartNumbersQuantityPrediction() {
                   key={i.key}
                   className={`${idx % 2 === 0 ? "bg-[#FFFFFF]" : "bg-[#ECEFF1]"} hover:bg-blue-50 transition-colors duration-150 border-b border-gray-100 h-[60px] text-[13px]`}
                 >
-                  <td className="px-4 py-3 text-center text-[#101010] font-medium">{i.dealer_code}</td>
-                  <td className="px-4 py-3 text-center text-[#101010] font-medium">{i.partNumber}</td>
-                  <td className="px-4 py-3 text-center text-[#101010]">{i.piPrediction}</td>
-                  <td className="px-4 py-3 font-semibold text-center text-red-600">{i.iaiPrediction}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* BULK TABLE */}
-      {predictionMode === "bulk" && top100Data.length > 0 && (
-        <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
-          <table className="w-full min-w-[900px] text-xs border-collapse font-sans">
-            <thead>
-              <tr className="sticky top-0 z-10 h-[66px] bg-[#2953CD] text-white">
-                {["Rank", "Part Number", "iAI Monthly Prediction", "PI Suggested Stock"].map(
-                  (heading, index) => (
-                    <th
-                      key={index}
-                      className="px-4 py-3 text-[13px] font-semibold text-white text-center whitespace-nowrap bg-[#2953CD]"
-                    >
-                      <div className="flex items-center justify-center gap-2 cursor-pointer">
-                        <span>{heading}</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3 opacity-80">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                        </svg>
-                      </div>
-                    </th>
-                  )
-                )}
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-              {currentParts.map((i, idx) => (
-                <tr
-                  key={i.item_no}
-                  className={`${idx % 2 === 0 ? "bg-[#FFFFFF]" : "bg-[#ECEFF1]"} hover:bg-blue-50 transition-colors duration-150 border-b border-gray-100 h-[60px] text-[13px]`}
-                >
-                  <td className="px-4 py-3 text-center font-semibold text-[#101010]">
-                    {indexOfFirstRow + idx + 1}
+                  <td className="px-4 py-3 text-center text-[#101010] font-medium">
+                    {i.dealer_code}
                   </td>
-                  <td className="px-4 py-3 text-center text-[#101010] font-medium">{i.item_no}</td>
+
+                  <td className="px-4 py-3 text-center text-[#101010] font-medium">
+                    {i.partNumber}
+                  </td>
+
+                  <td className="px-4 py-3 text-center text-[#101010]">
+                    {i.isLoading ? (
+                      <CellLoader />
+                    ) : Number.isFinite(Number(i.piPrediction)) ? (
+                      i.piPrediction
+                    ) : (
+                      0
+                    )}
+                  </td>
+
                   <td className="px-4 py-3 font-semibold text-center text-red-600">
-                    {Math.round(i.predicted_monthly)}
+                    {i.isLoading ? (
+                      <CellLoader />
+                    ) : Number.isFinite(Number(i.iaiPrediction)) ? (
+                      i.iaiPrediction
+                    ) : (
+                      0
+                    )}
                   </td>
-                  <td className="px-4 py-3 text-center text-[#101010]">{i.pe_suggested_stock_qty}</td>
+
                 </tr>
               ))}
-            </tbody>
-          </table>
+          </tbody>
+        </table>
         </div>
-      )}
+  )
+}
 
-      {/* PAGINATION SECTION */}
-      {predictionMode === "bulk" && totalPages > 1 && (
-        <div className="flex justify-center mt-4">
-          <ul className="flex items-center gap-2 text-bold">
-            <li>
-              <button
-                onClick={goToPrevPage}
-                disabled={currentPage === 1}
-                className="px-3 py-1 hover:text-[#2953CD] font-bold"
-              >
-                &lt;
-              </button>
-            </li>
-
-            {(() => {
-              let pages = [];
-              if (totalPages <= 3) {
-                pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-              } else if (currentPage === 1) {
-                pages = [1, 2, 3];
-              } else if (currentPage === totalPages) {
-                pages = [totalPages - 2, totalPages - 1, totalPages];
-              } else {
-                pages = [currentPage - 1, currentPage, currentPage + 1];
-              }
-
-              return pages.map((page) => (
-                <li
-                  key={page}
-                  className={`px-3 py-1 cursor-pointer font-bold ${page === currentPage
-                    ? "border-b-2 border-[#2953CD] text-[#2953CD]"
-                    : "hover:text-[#2953CD]"
-                    }`}
-                  onClick={() => setCurrentPage(page)}
+{/* BULK TABLE */ }
+{
+  predictionMode === "bulk" && top100Data.length > 0 && (
+    <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+      <table className="w-full min-w-[900px] text-xs border-collapse font-sans">
+        <thead>
+          <tr className="sticky top-0 z-10 h-[66px] bg-[#2953CD] text-white">
+            {["Rank", "Part Number", "PI Suggested Stock", "iAI Monthly Prediction"].map(
+              (heading, index) => (
+                <th
+                  key={index}
+                  className="px-4 py-3 text-[13px] font-semibold text-white text-center whitespace-nowrap bg-[#2953CD]"
                 >
-                  {page}
-                </li>
-              ));
-            })()}
+                  <div className="flex items-center justify-center gap-2 cursor-pointer">
+                    <span>{heading}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3 opacity-80">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </div>
+                </th>
+              )
+            )}
+          </tr>
+        </thead>
+        <tbody className="bg-white">
+          {currentParts.map((i, idx) => (
+            <tr
+              key={i.item_no}
+              className={`${idx % 2 === 0 ? "bg-[#FFFFFF]" : "bg-[#ECEFF1]"} hover:bg-blue-50 transition-colors duration-150 border-b border-gray-100 h-[60px] text-[13px]`}
+            >
+              <td className="px-4 py-3 text-center font-semibold text-[#101010]">
+                {indexOfFirstRow + idx + 1}
+              </td>
+              <td className="px-4 py-3 text-center text-[#101010] font-medium">{i.item_no}</td>
 
-            <li>
-              <button
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 hover:text-[#2953CD] font-bold"
-              >
-                &gt;
-              </button>
-            </li>
-          </ul>
-        </div>
-      )}
+              <td className="px-4 py-3 text-center text-[#101010]">{i.pe_suggested_stock_qty}</td>
+              <td className="px-4 py-3 font-semibold text-center text-red-600">
+                {Math.round(i.predicted_today)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
+  )
+}
+
+{/* PAGINATION SECTION */ }
+{
+  predictionMode === "bulk" && totalPages > 1 && (
+    <div className="flex justify-center mt-4">
+      <ul className="flex items-center gap-2 text-bold">
+        <li>
+          <button
+            onClick={goToPrevPage}
+            disabled={currentPage === 1}
+            className="px-3 py-1 hover:text-[#2953CD] font-bold"
+          >
+            &lt;
+          </button>
+        </li>
+
+        {(() => {
+          let pages = [];
+          if (totalPages <= 3) {
+            pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+          } else if (currentPage === 1) {
+            pages = [1, 2, 3];
+          } else if (currentPage === totalPages) {
+            pages = [totalPages - 2, totalPages - 1, totalPages];
+          } else {
+            pages = [currentPage - 1, currentPage, currentPage + 1];
+          }
+
+          return pages.map((page) => (
+            <li
+              key={page}
+              className={`px-3 py-1 cursor-pointer font-bold ${page === currentPage
+                ? "border-b-2 border-[#2953CD] text-[#2953CD]"
+                : "hover:text-[#2953CD]"
+                }`}
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </li>
+          ));
+        })()}
+
+        <li>
+          <button
+            onClick={goToNextPage}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 hover:text-[#2953CD] font-bold"
+          >
+            &gt;
+          </button>
+        </li>
+      </ul>
+    </div>
+  )
+}
+    </div >
   );
 }

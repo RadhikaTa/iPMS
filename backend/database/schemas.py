@@ -60,3 +60,13 @@ class listModel(BaseModel):
  
     class Config:
         populate_by_name = True
+
+
+class Top100Part(BaseModel):
+    item_no: str
+    dealer_code: str
+    predicted_today: float
+    pe_suggested_stock_qty: int
+
+    class Config:
+        populate_by_name = True

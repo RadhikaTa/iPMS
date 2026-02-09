@@ -1,6 +1,8 @@
 import os
 import psycopg2
 from psycopg2 import OperationalError
+import psycopg2.extras
+
 
 def get_db_connection():
     print("DB DEBUG:", os.getenv("DB_HOST"), os.getenv("DB_NAME"))
