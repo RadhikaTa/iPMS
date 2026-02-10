@@ -243,7 +243,7 @@ def get_top100_parts_comparison(dealer_code: str, month: str, cursor=Depends(get
         ORDER BY t1.predicted_monthly DESC
         LIMIT 100
     """
-
+    debug_query(cursor, query, m_num, dealer, date_str)
     cursor.execute(query, (m_num, dealer, date_str, date_str))
 
     return [
@@ -255,3 +255,7 @@ def get_top100_parts_comparison(dealer_code: str, month: str, cursor=Depends(get
         }
         for r in cursor.fetchall()
     ]
+
+
+def debug_query(cursor, query, m_num, dealer, date_str):
+    print(cursor.mogrify(query, (m_num, dealer, date_str, date_str)).decode("utf-8"))

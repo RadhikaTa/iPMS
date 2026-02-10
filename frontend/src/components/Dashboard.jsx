@@ -447,7 +447,7 @@ const Dashboard = () => {
                             </th>
  
                             {/* Header Columns */}
-                            {["Part No", "Part Name", "Status"].map((heading, index) => (
+                            {["Part No", "Part Name", "Available Qty", "Monthly Suggested Qty", "DNP", "Last Sale Date", "Last Purchase Date", "Age(Month)", "12 Month Sale Qty", "Product Heirarchy", "Item Info"].map((heading, index) => (
                                 <th
                                     key={index}
                                     className={`px-4 py-3 text-[13px] font-semibold text-white whitespace-nowrap bg-[#2953CD] ${heading === "Status" ? "text-center" : "text-left"
@@ -508,7 +508,30 @@ const Dashboard = () => {
                                     <td className="px-4 py-3 text-[#101010] text-left">
                                         {item.part_name}
                                     </td>
- 
+                                    <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.available_qty}
+                                    </td>
+                                    <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.monthly_suggested}
+                                    </td>
+                                    <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.dnp}
+                                    </td>
+                                    <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.last_sales_date}
+                                    </td>
+                                     <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.last_purchase_date}
+                                    </td>
+                                    <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.age}
+                                    </td>
+                                    <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.sale_in_12_months}
+                                    </td>
+                                    <td className="px-4 py-3 text-[#101010] text-left">
+                                        {item.heirarchy}
+                                    </td>
                                     {/* Status Badge - Kept Center to match the now Centered Header */}
                                     <td className="px-4 py-3 text-center">
                                         <span
