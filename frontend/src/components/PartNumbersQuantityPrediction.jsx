@@ -78,13 +78,14 @@ export default function PartNumbersQuantityPrediction() {
       const dbRes = await axios.get(`${API_URL}/stock-details?cust_number=${dealerCode}&item_no=${singlePartNumber}`);
       const piQty = dbRes.data?.[0]?.pe_suggested_stock_qty ?? "-";
 
-      const mlQty = await fetchWithBackoff(`${HTTP_URL}/predict`, {
+      // Use the new ML prediction endpoint
+      const mlRes = await fetchWithBackoff(`${HTTP_URL}/predict-ml`, {
         dealer_code: dealerCode,
         part_number: singlePartNumber,
         month: selectedMonth,
       });
 
-      updateItemByKey(key, { piPrediction: piQty, iaiPrediction: Math.round(mlQty), isLoading: false });
+      updateItemByKey(key, { piPrediction: piQty, iaiPrediction: mlRes, isLoading: false });
     } catch (e) {
       updateItemByKey(key, { iaiPrediction: "FAIL", isLoading: false });
       setSingleError("Prediction failed. Please check server.");

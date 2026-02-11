@@ -9,6 +9,7 @@ import os
 # Ensure these imports match your project structure
 # NOTE: The router file must now contain the actual /api/top100-parts logic.
 from backend.prediction_backend import router as prediction_router
+from backend.ml_prediction_backend import router as ml_prediction_router
 from backend.database.db_connection import get_db_connection
 from backend.database import schemas
 
@@ -30,8 +31,11 @@ print("DB_USER =", os.getenv("DB_USER"))
 # FastAPI App
 app = FastAPI()
 
-# Include prediction router under root
+# Include prediction router under root (original DB-backed predictions)
 app.include_router(prediction_router)
+
+# Include ML prediction router (new real-time ML predictions)
+app.include_router(ml_prediction_router)
 
 # CORS
 app.add_middleware(
